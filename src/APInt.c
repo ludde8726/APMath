@@ -56,3 +56,11 @@ void free_apint(APInt *num) {
     free(num->digits);
     free(num);
 }
+
+void apint_normalize(APInt *num) {
+    while (num->size > 1 && num->digits[num->size - 1] == 0) num->size--;
+    if (num->size == 0) {
+        num->size = 1;
+        num->digits[0] = 1;
+    }
+}

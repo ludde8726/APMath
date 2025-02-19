@@ -57,20 +57,20 @@ APInt *apint_add(APInt* x, APInt *y) {
     }
 
     size_t max_size = (x->size > y->size ? x->size : y->size) + 1;
-    APInt *result = init_apint(max_size);
-    result->sign = x->sign;
+    APInt *res = init_apint(max_size);
+    res->sign = x->sign;
     
     int carry = 0;
     for (size_t i = 0; i < max_size; i++) {
         int sum = carry;
         if (i < x->size) sum += x->digits[i];
         if (i < y->size) sum += y->digits[i];
-        result->digits[i] = sum % 10;
+        res->digits[i] = sum % 10;
         carry = sum / 10;
     }
-    result->size = max_size;
-    while (result->size > 1 && result->digits[result->size-1] == 0) result->size--;
-    return result;
+    res->size = max_size;
+    apint_normalize(res);
+    return res;
 }
 
 APFloat *apfloat_add(APFloat *x, APFloat *y) {
@@ -101,6 +101,7 @@ APFloat *apfloat_add(APFloat *x, APFloat *y) {
     res->exponent = aligned_x->exponent;
     free_apfloat(aligned_x);
     free_apfloat(aligned_y);
+    apfloat_normalize(res);
     return res;
 }
 
@@ -159,7 +160,7 @@ APInt *apint_sub(APInt *x, APInt *y)
         res->size = larger->size;
     }
     res->size = larger->size;
-    while (res->size > 1 && res->digits[res->size - 1] == 0) res->size--;
+    apint_normalize(res);
     return res;
 }
 
@@ -168,7 +169,7 @@ APFloat *apfloat_sub(APFloat *x, APFloat *y)
     APFloat *neg_y = copy_apfloat(y);
     neg_y->sign = -y->sign;
     APFloat *res = apfloat_add(x, neg_y);
-    free_apfloat(neg_y);
+    free_apfloat(neg_y); // It might be faster to just change the sign of y and then change back since that means no copy.
     return res;
 }
 

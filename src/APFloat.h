@@ -12,3 +12,4 @@ APFloat *init_apfloat(size_t capacity);
 APFloat *apfloat_from_apint(APInt *num, long long exponent);
 APFloat *copy_apfloat(APFloat *num);
 void free_apfloat(APFloat *num);
+void apfloat_normalize(APFloat *num);

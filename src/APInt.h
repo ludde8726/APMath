@@ -13,3 +13,4 @@ APInt *init_apint(size_t capacity);
 APInt *copy_apint(APInt *num);
 APInt *apint_from_string(const char *str);
 void free_apint(APInt *num);
+void apint_normalize(APInt *num);

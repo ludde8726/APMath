@@ -41,3 +41,8 @@ void free_apfloat(APFloat *num) {
     free_apint(num->significand);
     free(num);
 }
+
+void apfloat_normalize(APFloat *num) {
+    num->significand->sign = 1;
+    apint_normalize(num->significand);
+}

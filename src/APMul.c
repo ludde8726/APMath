@@ -19,9 +19,8 @@ APInt *apint_mul(APInt *x, APInt *y) {
             carry = product / 10;
         }
     }
-
-    while (res->size > 1 && res->digits[res->size - 1] == 0) res->size--;
     res->sign = x->sign * y->sign;
+    apint_normalize(res);
     return res;
 }
 
@@ -31,6 +30,7 @@ APFloat *apfloat_mul(APFloat *x, APFloat *y) {
     res->exponent = x->exponent + y->exponent;
     APInt *significand_product = apint_mul(x->significand, y->significand);
     res->significand = significand_product;
+    apfloat_normalize(res);
     return res;
 }
 
