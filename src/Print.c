@@ -22,7 +22,7 @@ char *string_apfloat(APFloat *num) {
     size_t index = 0;
     if (num->sign == -1) res[index++] = '-';
     for (size_t i = num->significand->size; i>0; i--) {
-        if (i == num->significand->size + num->exponent) res[index++] = '.';
+        if (i == -num->exponent) res[index++] = '.';
         res[index++] = num->significand->digits[i-1] + '0';
     }
     if (num->exponent > 0) snprintf(res+index, 6+(int)log10(num->exponent), "*10^%lld", num->exponent);

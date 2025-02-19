@@ -126,8 +126,18 @@ int main() {
     print_apint(lint);
     print_apint(lint2);
     print_apint(lres);
-    free_apint(lint);
-    free_apint(lint2);
+
+    APFloat *lfloat = apfloat_from_apint(lint, -2);
+    APFloat *lfloa2 = apfloat_from_apint(lint2, -3);
+    APFloat *lres2 = apfloat_mul(lfloat, lfloa2);
+    print_apfloat(lfloat);
+    print_apfloat(lfloa2);
+    print_apfloat(lres2);
+
+    free_apint(lres);
+    free_apfloat(lfloat);
+    free_apfloat(lfloa2);
+    free_apfloat(lres2);
 }
 // 110 + 1,10 -> 110 + 110 * 10^-2
 //               11000 * 10^-2 + 110 * 10^-2 

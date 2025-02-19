@@ -26,7 +26,12 @@ APInt *apint_mul(APInt *x, APInt *y) {
 }
 
 APFloat *apfloat_mul(APFloat *x, APFloat *y) {
-    return NULL;
+    APFloat *res = init_apfloat(x->significand->size+y->significand->size);
+    res->sign = x->sign * y->sign;
+    res->exponent = x->exponent + y->exponent;
+    APInt *significand_product = apint_mul(x->significand, y->significand);
+    res->significand = significand_product;
+    return res;
 }
 
 APComplex *apcomplex_mul(APComplex *x, APComplex *y) {

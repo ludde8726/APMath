@@ -24,6 +24,7 @@ APFloat *apfloat_from_apint(APInt *num, long long exponent)
     num->sign = 1;
     res->significand = num;
     res->exponent = exponent;
+    return res;
 }
 
 APFloat *copy_apfloat(APFloat *num)
