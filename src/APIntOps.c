@@ -87,7 +87,7 @@ APInt *apint_sub_ex(APInt *x, APInt *y, uint32_t precision) {
     // If x and y have different signs, negate y and perfom an add
     if (x->sign != y->sign) {
         APInt *neg_y = apint_copy(y);
-        neg_y->sign = -1;
+        neg_y->sign = -y->sign;
         APInt *res = apint_add_ex(x, neg_y, precision);
         apint_free(neg_y);
         return res;

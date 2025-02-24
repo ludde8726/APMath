@@ -87,6 +87,7 @@ APInt *apint_from_int(long long num) {
     APInt *res = apint_init();
     res->sign = num >= 0 ? 1 : -1;
     uint32_t intlen = num == 0 ? 1 : (uint32_t)log10(llabs(num)) + 1;
+    if (num < 0) num = llabs(num);
     // If the length of the number is greater than the current precision, truncate the least significant digits.
     if (intlen > res->capacity) num /= (int)pow(10, intlen-res->capacity);
     int idx = 0;

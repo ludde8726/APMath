@@ -1,47 +1,38 @@
-# Compiler and flags
-CC = clang
-CFLAGS = -Wall -Wextra -O2 -g -MMD -MP
-LDFLAGS = 
+CC := clang
+LDFLAGS := -shared
+BUILD_DIR := build
+SRC_DIR := src
+TEST_DIR := test
+LIB_NAME := libapmath.so
 
-# Directories
-SRC_DIR = src
-BUILD_DIR = build
-BIN_DIR = $(BUILD_DIR)/bin
-OBJ_DIR = $(BUILD_DIR)/obj
+CFLAGS := -fPIC -Wall -Wextra -Werror -g -I$(SRC_DIR)
 
-# Output binary
-TARGET = $(BIN_DIR)/apmath
+# Find all .c files in src and test directories
+SRC_FILES := $(wildcard $(SRC_DIR)/*.c)
+OBJ_FILES := $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRC_FILES))
+TEST_FILES := $(wildcard $(TEST_DIR)/*.c)
 
-# Find all C source files in the src/ directory
-SOURCES := $(wildcard $(SRC_DIR)/*.c)
-OBJECTS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SOURCES))
-
-# Dependency files
-DEPS := $(OBJECTS:.o=.d)
-
-# Default target
-all: $(TARGET)
-
-# Create the build directory structure
+# Ensure build directory exists
 $(BUILD_DIR):
-	mkdir -p $(OBJ_DIR) $(BIN_DIR)
+	mkdir -p $(BUILD_DIR)
 
-# Build the executable
-$(TARGET): $(BUILD_DIR) $(OBJECTS)
-	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+# Build the shared library
+$(BUILD_DIR)/$(LIB_NAME): $(OBJ_FILES) | $(BUILD_DIR)
+	$(CC) $(LDFLAGS) -o $@ $^
 
-# Compile source files to object files and generate dependencies
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+# Compile source files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Include dependency files if they exist
--include $(DEPS)
+all: $(BUILD_DIR)/$(LIB_NAME)
 
-# Clean up build artifacts
+# Run tests
+test: all
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_runner $(TEST_FILES) -L$(BUILD_DIR) -lapmath
+	LD_LIBRARY_PATH=$(BUILD_DIR) ./$(BUILD_DIR)/test_runner
+
+# Clean build files
 clean:
 	rm -rf $(BUILD_DIR)
 
-run: all
-	./$(TARGET)
-
-.PHONY: all clean
+.PHONY: all test clean
