@@ -1,4 +1,4 @@
-CC := clang
+CC := gcc
 LDFLAGS := -shared
 BUILD_DIR := build
 SRC_DIR := src
@@ -12,6 +12,8 @@ SRC_FILES := $(wildcard $(SRC_DIR)/*.c)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRC_FILES))
 TEST_FILES := $(wildcard $(TEST_DIR)/*.c)
 
+all: $(BUILD_DIR)/$(LIB_NAME)
+
 # Ensure build directory exists
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -24,7 +26,6 @@ $(BUILD_DIR)/$(LIB_NAME): $(OBJ_FILES) | $(BUILD_DIR)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-all: $(BUILD_DIR)/$(LIB_NAME)
 
 # Run tests
 test: all

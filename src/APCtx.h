@@ -11,3 +11,5 @@ extern struct APContext ctx;
 inline uint32_t ap_get_precision(void) {
     return ctx.precision;
 }
+
+void ap_set_precision(uint32_t prec);

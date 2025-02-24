@@ -135,8 +135,39 @@ APInt *apint_sub_ex(APInt *x, APInt *y, uint32_t precision) {
 
 #endif
 
-APInt *apint_mul(APInt *x, APInt *y);
-APInt *apint_mul_ex(APInt *x, APInt *y, uint32_t precision);
+APInt *apint_mul(APInt *x, APInt *y) {
+    // For multiplication n + 1 significant digits is needed for the operands to achive correct result for n digits of precision
+    if (x->size > ctx.precision + 1) apint_resize(x, ctx.precision + 1);
+    if (y->size > ctx.precision + 1) apint_resize(y, ctx.precision + 1);
+    uint32_t workprec = x->size + y->size;
+    APInt *res = apint_mul_ex(x, y, workprec);
+    apint_resize(res, ctx.precision);
+    return res;
+}
+
+APInt *apint_mul_ex(APInt *x, APInt *y, uint32_t precision) {
+    if (apint_is_zero(x) || apint_is_zero(y)) {
+        APInt *zero = apint_init_ex(precision);
+        zero->size = 1;
+        zero->digits[0] = 0;
+        return zero;
+    }
+    // loop through x and y
+    APInt *res = apint_init_ex(precision);
+    for (uint32_t i = 0; i < x->size; i++) {
+        DIGITS_DTYPE carry = 0;
+        // While we have values for y[j] or we have a carry, continue
+        for (uint32_t j = 0; j < y->size || carry; j++) {
+            DIGITS_DTYPE product = res->digits[i + j] + x->digits[i] * (j < y->size ? y->digits[j] : 0) + carry;
+            res->digits[i + j] = product % 10;
+            carry = product / 10;
+        }
+    }
+    res->size = precision;
+    res->sign = x->sign == y->sign ? 1 : -1;
+    apint_normalize(res);
+    return res;
+}
 APInt *apint_div(APInt *x, APInt *y);
 APInt *apint_div_ex(APInt *x, APInt *y, uint32_t precision);
 APInt *apint_pow(APInt *x, APInt *y);
