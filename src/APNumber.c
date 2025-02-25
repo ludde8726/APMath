@@ -57,7 +57,7 @@ APInt *apint_copy_ex(APInt *num, uint32_t precision) {
     res->sign = num->sign;
     if (num->size > precision) memcpy(res->digits, num->digits + (num->size - precision), precision * sizeof(DIGITS_DTYPE));
     else memcpy(res->digits, num->digits, num->size * sizeof(DIGITS_DTYPE));
-    res->size = num->size;
+    res->size = (num->size > precision) ? precision : num->size;
     return res;
 }
 
@@ -66,7 +66,7 @@ int apint_resize(APInt *num, uint32_t precision) {
     if (!new_digits) return 0; // Memory allocation failed.
     // If the size of num i greater than the precision, loose the least significant digits.
     if (num->size > precision) {
-        num->digits[precision-1] += num->digits[precision] >= 5 ? 1 : 0;
+        // num->digits[num->size-precision-1] += num->digits[num->size-precision] >= 5 ? 1 : 0;
         memmove(new_digits, num->digits + (num->size - precision), precision * sizeof(DIGITS_DTYPE));
     // Else copy digits directly from digits to new_digits
     } else memmove(new_digits, num->digits, num->size * sizeof(DIGITS_DTYPE));
