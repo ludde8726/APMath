@@ -70,18 +70,18 @@ int test_sub() {
 
 int test_mul() {
     for (int i = 0; i < ITERATIONS; i++) {
-        int x = RANDOM_NUMBER;
-        int y = RANDOM_NUMBER;
-        int res = x * y;
+        long long x = RANDOM_NUMBER;
+        long long y = RANDOM_NUMBER;
+        long long res = x * y;
         APInt *apint_x = apint_from_int(x);
         APInt *apint_y = apint_from_int(y);
         APInt *apint_res = apint_mul(apint_x, apint_y);
 
-        if (apint_res->size != (res == 0 ? 1 : (uint32_t)log10(abs(res)) + 1)) return 0;
+        if (apint_res->size != (res == 0 ? 1 : (uint32_t)log10(llabs(res)) + 1)) return 0;
         if (apint_res->sign != (res >= 0 ? 1 : -1)) return 0;
 
         for (uint32_t j = 0; j < apint_res->size; j++) {
-            uint32_t num_at_j = (uint8_t)abs((res % (int)pow(10, j + 1)) / (int)pow(10, j));
+            uint32_t num_at_j = (uint8_t)llabs((res % (long long)pow(10, j + 1)) / (long long)pow(10, j));
             if (apint_res->digits[j] != num_at_j) {
                 return 0;
             }

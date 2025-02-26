@@ -7,8 +7,6 @@
 
 // Helpers, compare, shift, etc.
 #if 1
-// Compare the absolute values of x and y
-// if x > y -> 1, if x < y -> -1, if x == y -> 0
 int apint_abs_compare(const APInt *x, const APInt *y) {
     if (x->size > y->size) return 1;
     if (x->size < y->size) return -1;
@@ -19,9 +17,6 @@ int apint_abs_compare(const APInt *x, const APInt *y) {
     return 0;
 }
 
-// In-place left shift: Multiply the number by 10^n.
-// This is achieved by shifting the digits right in the digits array (toward higher indices).
-// Note that this function modifies x.
 void apint_left_shift_inplace(APInt *x, uint32_t n) {
     if (x->size + n > x->capacity) {
         fprintf(stderr, "Insufficient capacity for left shift.\n");
@@ -32,9 +27,6 @@ void apint_left_shift_inplace(APInt *x, uint32_t n) {
     x->size += n;
 }
 
-// In-place left shift: Divide the number by 10^n.
-// This is achieved by shifting the digits left in the digits array (toward lower indices).
-// Note that this function modifies x.
 void apint_right_shift_inplace(APInt *x, uint32_t n) {
     if (n >= x->size) {
         x->size = 1;
@@ -45,9 +37,6 @@ void apint_right_shift_inplace(APInt *x, uint32_t n) {
     x->size -= n;
 }
 
-// Left shift: Multiply the number by 10^n
-// This is achieved by shifting the digits right in the digits array (toward higher indices).
-// Note that this function returns a new shifted APInt.
 APInt *apint_left_shift(APInt *x, uint32_t n) {
     APInt *res = apint_init_ex(x->size + n);
     memcpy(res->digits + n, x->digits, x->size * sizeof(DIGITS_DTYPE));
@@ -55,9 +44,6 @@ APInt *apint_left_shift(APInt *x, uint32_t n) {
     return res;
 }
 
-// Right shift: Divide the number by 10^n
-// This is achieved by shifting the digits left in the digits array (toward lower indices).
-// Note that this function returns a new shifted APInt.
 APInt *apint_right_shift(APInt *x, uint32_t n) {
     if (n >= x->size) {
         APInt *res = apint_init_ex(x->size + n);
@@ -92,7 +78,6 @@ APInt *apint_add(APInt *x, APInt *y) {
 }
 
 APInt *apint_add_ex(APInt *x, APInt *y, uint32_t precision) {
-    // This function aussumes the precision is big enough to store the result, if not it will cause a segmentation fault.
     if (x->sign != y->sign) {
         if (x->sign == 1) { // y = -1
             APInt *pos_y = apint_copy_ex(y, y->capacity);
@@ -207,7 +192,6 @@ APInt *apint_mul_ex(APInt *x, APInt *y, uint32_t precision) {
     if (apint_is_zero(x) || apint_is_zero(y)) {
         APInt *zero = apint_init_ex(precision);
         zero->size = 1;
-        zero->digits[0] = 0;
         return zero;
     }
     // loop through x and y
@@ -230,7 +214,6 @@ APInt *apint_mul_ex(APInt *x, APInt *y, uint32_t precision) {
 #endif
 
 // Division
-
 #if 1
 
 APInt *apint_div(APInt *x, APInt *y, APInt **remainder) {
@@ -247,14 +230,14 @@ APInt *apint_div(APInt *x, APInt *y, APInt **remainder) {
         apint_left_shift_inplace(y, y_diff);
     }
     // We have to perform the calculation on the biggest possible size of x or y.
-    // However we still normalize them as small as possible not perform any unnecessary calculations.
+    // However we still normalize them as small as possible to not perform any unnecessary calculations.
     workprec = x->size >= y->size ? x->size : y->size;
     APInt *res = apint_div_ex(x, y, remainder, workprec);
     apint_resize(res, ctx.precision);
     return res;
 }
 
-APInt *apint_div_ex(APInt *x, APInt *y, APInt **remainder, uint32_t precicion) { // https://chatgpt.com/c/67be0105-3354-800a-8a00-e1c16cb16226
+APInt *apint_div_ex(APInt *x, APInt *y, APInt **remainder, uint32_t precicion) {
     if (apint_is_zero(y)) {
         fprintf(stderr, "Error: Division by zero.\n");
         exit(1);
@@ -283,12 +266,6 @@ APInt *apint_div_ex(APInt *x, APInt *y, APInt **remainder, uint32_t precicion) {
         int count = 0;
         while (apint_abs_compare(rem, shifted_y) >= 0) { // while dividend >= divisor 
             APInt *new_rem = apint_sub_ex(rem, shifted_y, precicion);
-            // for (uint32_t i = 0; i < rem->capacity; i++) printf("%d", rem->digits[i]);
-            // printf(" - ");
-            // for (uint32_t i = 0; i < shifted_y->capacity; i++) printf("%d", shifted_y->digits[i]);
-            // printf(" = ");
-            // for (uint32_t i = 0; i < new_rem->capacity; i++) printf("%d", new_rem->digits[i]);
-            // printf("\n");
             apint_free(rem);
             rem = new_rem;
             count++;
@@ -306,6 +283,7 @@ APInt *apint_div_ex(APInt *x, APInt *y, APInt **remainder, uint32_t precicion) {
     apint_free(shifted_y);
     return res;
 }
+
 #endif
 
 APInt *apint_pow(APInt *x, APInt *y);
