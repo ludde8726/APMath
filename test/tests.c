@@ -14,13 +14,13 @@ void testing() {
     // Set precision to 5 (we don't need more)
     ctx.precision = 12;
     // Create two ints
-    APInt *small_int = apint_from_int(1000);
-    APInt *small_int2 = apint_from_int(100);
+    APInt *small_int = apint_from_int(3);
+    APInt *small_int2 = apint_from_int(39);
     for (uint32_t i = 0; i < small_int->capacity; i++) printf("%d", small_int->digits[i]);
     printf("\n");
     for (uint32_t i = 0; i < small_int2->capacity; i++) printf("%d", small_int2->digits[i]);
     printf("\n");
-    APInt *sum_int = apint_div(small_int, small_int2, NULL);
+    APInt *sum_int = apint_pow(small_int, small_int2);
     for (uint32_t i = 0; i < sum_int->capacity; i++) printf("%d", sum_int->digits[i]);
     apint_free(small_int);
     apint_free(small_int2);
@@ -44,7 +44,7 @@ void test_runner(TestFunction tests[], int num_tests) {
 
 int main() {
     srand(time(0));
-    TestFunction tests[] = { test_create_from_int, test_add, test_sub, test_mul, test_div };
+    TestFunction tests[] = { test_create_from_int, test_add, test_sub, test_mul, test_div, test_pow };
     int num_tests = sizeof(tests) / sizeof(tests[0]);
     test_runner(tests, num_tests);
     printf("\n");

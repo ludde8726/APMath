@@ -76,8 +76,10 @@ APInt *apint_div(APInt *x, APInt *y, APInt **remainder);
 // Requires a specified precision; if it is not large enough to store the full result, undefined behavior may occur.  
 APInt *apint_div_ex(APInt *x, APInt *y, APInt **remainder, uint32_t precision);  
 
+// Exponentiation function: Compute x raised to the power of y  
+// Computes the power using the fast exponentiation algorithm (exponentiation by squaring),  
+// which repeatedly squares the base and reduces the exponent by half.  
+// Note that this function works on the current working precision and may modify the parameters.  
 APInt *apint_pow(APInt *x, APInt *y);
-APInt *apint_pow_ex(APInt *x, APInt *y, uint32_t precision);
-APInt *apint_log(APInt *x, APInt *base); // Might not be needed
 
 #endif

@@ -119,3 +119,29 @@ int test_div() {
     }
     return 1;
 }
+
+int test_pow() {
+    for (int i = 0; i < ITERATIONS; i++) {
+        long long x = (long long)(rand() % 20) - 10;
+        long long y = (long long)(rand() % 10);
+        long long res = (long long)pow(x, y);
+        APInt *apint_x = apint_from_int(x);
+        APInt *apint_y = apint_from_int(y);
+        APInt *apint_res = apint_pow(apint_x, apint_y);
+
+        if (apint_res->size != (res == 0 ? 1 : (uint32_t)log10(llabs(res)) + 1)) return 0;
+        if (apint_res->sign != (res >= 0 ? 1 : -1)) return 0;
+
+        for (uint32_t j = 0; j < apint_res->size; j++) {
+            uint32_t num_at_j = (uint8_t)llabs((res % (long long)pow(10, j + 1)) / (long long)pow(10, j));
+            if (apint_res->digits[j] != num_at_j) {
+                return 0;
+            }
+        }
+
+        apint_free(apint_x);
+        apint_free(apint_y);
+        apint_free(apint_res);
+    }
+    return 1;
+}
