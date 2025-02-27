@@ -330,4 +330,47 @@ APInt *apint_pow(APInt *x, APInt *y) {
     return res;
 }
 
+APInt *apint_pow_exact(APInt *x, APInt *y) {
+    if (y->sign == -1) {
+        fprintf(stderr, "Error: Integer exponentiation only works on exponents greater than or equal to 0.\n");
+        exit(1);
+    }
+    APInt *base = apint_copy_ex(x, x->size);
+    APInt *exponent = apint_copy_ex(y, y->size);
+    APInt *two = apint_init_ex(1);
+    two->digits[0] = 2;
+    two->size = 1;
+
+    APInt *res = apint_init_ex(1);
+    res->digits[0] = 1;
+    res->size = 1;
+
+    while (!apint_is_zero(exponent)) {
+        APInt *quotient = NULL;
+        APInt *remainder = NULL;
+        quotient = apint_div_ex(exponent, two, &remainder, exponent->size);
+
+        if (!apint_is_zero(remainder)) {
+            APInt *temp = res;
+            res = apint_mul_ex(res, base, res->size + base->size);
+            apint_free(temp);
+        }
+        apint_free(exponent);
+        apint_free(remainder);
+        exponent = quotient;
+        
+        APInt *temp = base;
+        base = apint_mul_ex(base, base, base->size * 2);
+        apint_free(temp);
+    }
+    
+    apint_free(base);
+    apint_free(exponent);
+    apint_free(two);
+
+    apint_resize(res, res->size);
+
+    return res;
+}
+
 #endif
