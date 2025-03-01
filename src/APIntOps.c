@@ -5,7 +5,7 @@
 #include "APIntOps.h"
 #include "APNumber.h"
 
-// Helpers, compare, shift, etc.
+// Helpers
 #if 1
 int apint_abs_compare(const APInt *x, const APInt *y) {
     if (x->size > y->size) return 1;
@@ -34,6 +34,7 @@ void apint_right_shift_inplace(APInt *x, uint32_t n) {
         return;
     }
     memmove(x->digits, x->digits + n, (x->size - n) * sizeof(DIGITS_DTYPE));
+    memset(x->digits + (x->size - n), 0, n * sizeof(DIGITS_DTYPE));
     x->size -= n;
 }
 

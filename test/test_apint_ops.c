@@ -5,62 +5,63 @@
 #include "APNumber.h"
 #include "APIntOps.h"
 #include "test_apint_ops.h"
+#include "APCtx.h"
 
 #define RANDOM_NUMBER (long long)(rand() % RANDOM_MAX_INT) - RANDOM_MAX_INT/2
 
-int test_create_from_int() {
-    for (int i = 0; i < ITERATIONS; i++) {
-        int x = RANDOM_NUMBER;
-        uint32_t intlen = x == 0 ? 1 : (uint32_t)log10(abs(x)) + 1;
-        APInt *apint_repr = apint_from_int(x);
-        if (apint_repr->size != intlen) return 0;
-        if (apint_repr->sign != (x >= 0 ? 1 : -1)) return 0;
-        for (uint32_t j = 0; j < intlen; j++) {
-            uint32_t num_at_j = (uint8_t)abs((x % (int)pow(10, j + 1)) / (int)pow(10, j));
-            if (apint_repr->digits[j] != num_at_j) return 0;
+int apint_is_equal(APInt *num, long long int_num) {
+    if (num->size != (int_num == 0 ? 1 : (uint32_t)log10(llabs(int_num)) + 1)) return 0;
+    if (num->sign != (int_num >= 0 ? 1 : -1)) return 0;
+
+    for (uint32_t j = 0; j < num->size; j++) {
+        uint32_t num_at_j = (uint8_t)llabs((int_num % (long long)pow(10, j + 1)) / (long long)pow(10, j));
+        if (num->digits[j] != num_at_j) {
+            return 0;
         }
+    }
+    return 1;
+}
+
+int apint_test_create_from_int() {
+    ctx.precision = 16;
+    for (int i = 0; i < ITERATIONS; i++) {
+        long long x = RANDOM_NUMBER;
+        APInt *apint_repr = apint_from_int(x);
+        if (!apint_is_equal(apint_repr, x)) return 0;
         apint_free(apint_repr);
     }
     return 1;
 }
 
-int test_add() {
+int apint_test_add() {
+    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
-        int x = RANDOM_NUMBER;
-        int y = RANDOM_NUMBER;
-        int res = x + y;
+        long long x = RANDOM_NUMBER;
+        long long y = RANDOM_NUMBER;
+        long long res = x + y;
         APInt *apint_x = apint_from_int(x);
         APInt *apint_y = apint_from_int(y);
         APInt *apint_res = apint_add(apint_x, apint_y);
 
-        if (apint_res->size != (res == 0 ? 1 : (uint32_t)log10(abs(res)) + 1)) return 0;
-        if (apint_res->sign != (res >= 0 ? 1 : -1)) return 0;
-        for (uint32_t j = 0; j < apint_res->size; j++) {
-            uint32_t num_at_j = (uint8_t)abs((res % (int)pow(10, j + 1)) / (int)pow(10, j));
-            if (apint_res->digits[j] != num_at_j) return 0;
-        }
+        if (!apint_is_equal(apint_res, res)) return 0;
         apint_free(apint_x);
         apint_free(apint_y);
         apint_free(apint_res);
     }
     return 1;
 }
-int test_sub() {
+int apint_test_sub() {
+    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
-        int x = RANDOM_NUMBER;
-        int y = RANDOM_NUMBER;
-        int res = x - y;
+        long long x = RANDOM_NUMBER;
+        long long y = RANDOM_NUMBER;
+        long long res = x - y;
         APInt *apint_x = apint_from_int(x);
         APInt *apint_y = apint_from_int(y);
         APInt *apint_res = apint_sub(apint_x, apint_y);
 
-        if (apint_res->size != (res == 0 ? 1 : (uint32_t)log10(abs(res)) + 1)) return 0;
-        if (apint_res->sign != (res >= 0 ? 1 : -1)) return 0;
+        if (!apint_is_equal(apint_res, res)) return 0;
 
-        for (uint32_t j = 0; j < apint_res->size; j++) {
-            uint32_t num_at_j = (uint8_t)abs((res % (int)pow(10, j + 1)) / (int)pow(10, j));
-            if (apint_res->digits[j] != num_at_j) return 0;
-        }
         apint_free(apint_x);
         apint_free(apint_y);
         apint_free(apint_res);
@@ -68,7 +69,8 @@ int test_sub() {
     return 1;
 }
 
-int test_mul() {
+int apint_test_mul() {
+    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = RANDOM_NUMBER;
         long long y = RANDOM_NUMBER;
@@ -77,15 +79,7 @@ int test_mul() {
         APInt *apint_y = apint_from_int(y);
         APInt *apint_res = apint_mul(apint_x, apint_y);
 
-        if (apint_res->size != (res == 0 ? 1 : (uint32_t)log10(llabs(res)) + 1)) return 0;
-        if (apint_res->sign != (res >= 0 ? 1 : -1)) return 0;
-
-        for (uint32_t j = 0; j < apint_res->size; j++) {
-            uint32_t num_at_j = (uint8_t)llabs((res % (long long)pow(10, j + 1)) / (long long)pow(10, j));
-            if (apint_res->digits[j] != num_at_j) {
-                return 0;
-            }
-        }
+        if (!apint_is_equal(apint_res, res)) return 0;
 
         apint_free(apint_x);
         apint_free(apint_y);
@@ -94,7 +88,8 @@ int test_mul() {
     return 1;
 }
 
-int test_div() {
+int apint_test_div() {
+    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
         int x = RANDOM_NUMBER;
         int y = RANDOM_NUMBER;
@@ -105,13 +100,7 @@ int test_div() {
         APInt *apint_y = apint_from_int(y);
         APInt *apint_res = apint_div(apint_x, apint_y, NULL);
 
-        if (apint_res->size != (res == 0 ? 1 : (uint32_t)log10(abs(res)) + 1)) return 0;
-        if (apint_res->sign != (res >= 0 ? 1 : -1)) return 0;
-
-        for (uint32_t j = 0; j < apint_res->size; j++) {
-            uint32_t num_at_j = (uint8_t)abs((res % (int)pow(10, j + 1)) / (int)pow(10, j));
-            if (apint_res->digits[j] != num_at_j) return 0;
-        }
+        if (!apint_is_equal(apint_res, res)) return 0;
 
         apint_free(apint_x);
         apint_free(apint_y);
@@ -120,7 +109,8 @@ int test_div() {
     return 1;
 }
 
-int test_pow() {
+int apint_test_pow() {
+    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = (long long)(rand() % 20) - 10;
         long long y = (long long)(rand() % 10);
@@ -129,15 +119,7 @@ int test_pow() {
         APInt *apint_y = apint_from_int(y);
         APInt *apint_res = apint_pow(apint_x, apint_y);
 
-        if (apint_res->size != (res == 0 ? 1 : (uint32_t)log10(llabs(res)) + 1)) return 0;
-        if (apint_res->sign != (res >= 0 ? 1 : -1)) return 0;
-
-        for (uint32_t j = 0; j < apint_res->size; j++) {
-            uint32_t num_at_j = (uint8_t)llabs((res % (long long)pow(10, j + 1)) / (long long)pow(10, j));
-            if (apint_res->digits[j] != num_at_j) {
-                return 0;
-            }
-        }
+        if (!apint_is_equal(apint_res, res)) return 0;
 
         apint_free(apint_x);
         apint_free(apint_y);

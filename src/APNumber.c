@@ -5,6 +5,7 @@
 
 #include "APCtx.h"
 #include "APNumber.h"
+#include "APIntOps.h"
 
 // APInt helper functions
 #if 1
@@ -66,7 +67,6 @@ int apint_resize(APInt *num, uint32_t precision) {
     if (!new_digits) return 0; // Memory allocation failed.
     // If the size of num i greater than the precision, loose the least significant digits.
     if (num->size > precision) {
-        // num->digits[num->size-precision-1] += num->digits[num->size-precision] >= 5 ? 1 : 0;
         memmove(new_digits, num->digits + (num->size - precision), precision * sizeof(DIGITS_DTYPE));
     // Else copy digits directly from digits to new_digits
     } else memmove(new_digits, num->digits, num->size * sizeof(DIGITS_DTYPE));
@@ -124,6 +124,101 @@ void apint_normalize(APInt *num) {
 
 // APFloat helper functions
 #if 1
+
+APFloat *apfloat_init() {
+    APFloat *num = (APFloat*)malloc(sizeof(APFloat));
+    if (!num) return NULL;
+    num->sign = 1;
+    num->significand = apint_init();
+    if (!num->significand) {
+        free(num);
+        return NULL;
+    }
+    num->exponent = 0;
+    return num;
+}
+
+APFloat *apfloat_init_ex(uint32_t precision) {
+    APFloat *num = (APFloat*)malloc(sizeof(APFloat));
+    if (!num) return NULL;
+    num->sign = 1;
+    num->significand = apint_init_ex(precision);
+    if (!num->significand) {
+        free(num);
+        return NULL;
+    }
+    num->exponent = 0;
+    return num;
+}
+
+APFloat *apfloat_init_empty() {
+    APFloat *num = (APFloat*)malloc(sizeof(APFloat));
+    if (!num) return NULL;
+    num->sign = 1;
+    num->significand = NULL;
+    num->exponent = 0;
+    return num;
+}
+
+
+APFloat *apfloat_copy(APFloat *num) {
+    APFloat *res = apfloat_init();
+    res->sign = num->sign;
+    res->significand = apint_copy(num->significand);
+    res->exponent = num->exponent;
+    return res;
+}
+
+APFloat *apfloat_copy_ex(APFloat *num, uint32_t precision) {
+    APFloat *res = apfloat_init();
+    res->sign = num->sign;
+    res->significand = apint_copy_ex(num->significand, precision);
+    res->exponent = num->exponent;
+    return res;
+}
+
+int apfloat_resize(APFloat *num, uint32_t precision) {
+    if (num->significand->size > precision) num->exponent += num->significand->size - precision;
+    return apint_resize(num->significand, precision);
+}
+
+APFloat *apfloat_from_apint(APInt *num, int64_t exponent) {
+    APFloat *res = (APFloat*)malloc(sizeof(APFloat));
+    if (!res) return NULL;
+    res->sign = num->sign;
+    num->sign = 1;
+    res->significand = num;
+    res->exponent = exponent;
+    return res;
+}
+
+void apfloat_free(APFloat *num) {
+    if (num->significand) apint_free(num->significand);
+    free(num);
+}
+
+void apfloat_normalize(APFloat *num) {
+    apint_normalize(num->significand);
+    num->significand->sign = 1;
+    while (num->significand->digits[0] == 0) {
+        apint_right_shift_inplace(num->significand, 1);
+        num->exponent++;
+    }
+}
+
+int apfloat_is_zero(APFloat *num) {
+    return apint_is_zero(num->significand);
+}
+
+int apfloat_is_int(APFloat *num) {
+    // 0001 -3 = 000.1 = 1.000
+    // 000007 -2 = 00.0007 = 7000.00 
+    if (num->exponent >= 0) return 1;
+    for (uint64_t i = -num->exponent; i > 0; i--)
+        if (num->significand->digits[i-1] != 0) return 0;
+    return 1;
+}
+
 #endif
 
 // APComplex helper functions

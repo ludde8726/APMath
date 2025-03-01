@@ -24,9 +24,9 @@ typedef struct {
 // exponent = The exponent, all APFloats are represented as a*10^b, where a is an int and b is a int exponent 
 // NOTE: Size and capacity does not need to be bigger than unit32_t since this requires ~4.3 GB of memory
 typedef struct {
-    int sign;
+    int8_t sign;
     APInt *significand;
-    long long exponent;
+    int64_t exponent;
 } APFloat;
 
 // Struct for representing large complex numbers
@@ -51,10 +51,15 @@ int apint_is_zero(APInt *num);
 // Float helpers
 APFloat *apfloat_init();
 APFloat *apfloat_init_ex(uint32_t precision);
-APFloat *apfloat_from_apint(APInt *num, long long exponent);
+APFloat *apfloat_init_empty();
 APFloat *apfloat_copy(APFloat *num);
+APFloat *apfloat_copy_ex(APFloat *num, uint32_t precision);
+int apfloat_resize(APFloat *num, uint32_t precision);
+APFloat *apfloat_from_apint(APInt *num, int64_t exponent);
 void apfloat_free(APFloat *num);
 void apfloat_normalize(APFloat *num);
+int apfloat_is_zero(APFloat *num);
+int apfloat_is_int(APFloat *num);
 
 // Complex helpers
 APComplex *apcomplex_init();
