@@ -68,7 +68,7 @@ void test_runner(TestFunction tests[], int num_tests) {
 
 int main() {
     srand(time(NULL));
-    TestFunction tests[] = { apint_test_create_from_int, apint_test_add, apint_test_sub, apint_test_mul, apint_test_div, apint_test_pow, apfloat_test_add, apfloat_test_sub };
+    TestFunction tests[] = { apint_test_create_from_int, apint_test_add, apint_test_sub, apint_test_mul, apint_test_div, apint_test_pow, apfloat_test_add, apfloat_test_sub, apfloat_test_mul };
     int num_tests = sizeof(tests) / sizeof(tests[0]);
     test_runner(tests, num_tests);
     printf("\n");

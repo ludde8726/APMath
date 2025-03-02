@@ -192,6 +192,17 @@ APFloat *apfloat_from_apint(APInt *num, int64_t exponent) {
     return res;
 }
 
+APFloat *apfloat_from_apint_ex(APInt *num, int64_t exponent, uint32_t precision) {
+    APFloat *res = (APFloat*)malloc(sizeof(APFloat));
+    if (!res) return NULL;
+    res->sign = num->sign;
+    num->sign = 1;
+    res->significand = num;
+    res->exponent = exponent;
+    apfloat_resize(res, precision);
+    return res;
+}
+
 void apfloat_free(APFloat *num) {
     if (num->significand) apint_free(num->significand);
     free(num);

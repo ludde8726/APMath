@@ -56,6 +56,7 @@ APFloat *apfloat_copy(APFloat *num);
 APFloat *apfloat_copy_ex(APFloat *num, uint32_t precision);
 int apfloat_resize(APFloat *num, uint32_t precision);
 APFloat *apfloat_from_apint(APInt *num, int64_t exponent);
+APFloat *apfloat_from_apint_ex(APInt *num, int64_t exponent, uint32_t precision);
 void apfloat_free(APFloat *num);
 void apfloat_normalize(APFloat *num);
 int apfloat_is_zero(APFloat *num);
