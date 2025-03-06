@@ -211,9 +211,11 @@ void apfloat_free(APFloat *num) {
 void apfloat_normalize(APFloat *num) {
     apint_normalize(num->significand);
     num->significand->sign = 1;
-    while (num->significand->digits[0] == 0) {
-        apint_right_shift_inplace(num->significand, 1);
-        num->exponent++;
+    if (!apint_is_zero(num->significand)) {
+        while (num->significand->digits[0] == 0) {
+            apint_right_shift_inplace(num->significand, 1);
+            num->exponent++;
+        }
     }
 }
 

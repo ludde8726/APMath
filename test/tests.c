@@ -6,6 +6,8 @@
 #include "APIntOps.h"
 #include "APFloatOps.h"
 #include "APNumber.h"
+#include "APHelpers.h"
+
 
 #include "test_apint_ops.h"
 #include "test_apfloat_ops.h"
@@ -22,33 +24,31 @@ void testing() {
     small_float->significand->digits[3] = 1;
     small_float->significand->digits[2] = 1;
     small_float->significand->size = 5;
-    small_float2->significand->digits[4] = 9;
-    small_float2->significand->digits[3] = 9;
-    small_float2->significand->digits[2] = 9;
-    small_float2->significand->digits[1] = 9;
-    small_float2->significand->digits[0] = 9;
+    small_float2->significand->digits[4] = 1;
+    small_float2->significand->digits[3] = 1;
+    small_float2->significand->digits[2] = 1;
     small_float2->significand->size = 5;
-    small_float->exponent = 1;
+    small_float->exponent = -2;
     small_float2->exponent = -3;
-    // 11.100 + 111.00 =
+    // 11.100 + 111.00 = 122.10
+    print_apfloat(small_float, REGULAR);
+    print_apfloat(small_float2, REGULAR);
     APFloat *res = apfloat_add(small_float, small_float2);
-    for (uint32_t i = 0; i < res->significand->capacity; i++) printf("%d", res->significand->digits[i]);
-    printf("\n");
-    
-    for (uint32_t i = 0; i < small_float->significand->capacity; i++) printf("%d", small_float->significand->digits[i]);
-    printf("\n");
-    for (uint32_t i = 0; i < small_float2->significand->capacity; i++) printf("%d", small_float2->significand->digits[i]);
-    printf("\n");
+    print_apfloat(res, REGULAR);
 
-    apint_resize(small_float2->significand, 4);
-
-    for (uint32_t i = 0; i < small_float2->significand->capacity; i++) printf("%d ", small_float2->significand->digits[i]);
-    printf("\n");
-
-    printf("RES_EXP: %lld\n", res->exponent);
     apfloat_free(small_float);
     apfloat_free(small_float2);
     apfloat_free(res);
+
+    APFloat *small_float3 = apfloat_init();
+    small_float3->significand->digits[0] = 1;
+    small_float3->significand->size = 1;
+    APFloat *small_float4 = apfloat_init();
+
+    APFloat *res2 = apfloat_mul(small_float3, small_float4);
+    apfloat_free(small_float3);
+    apfloat_free(small_float4);
+    apfloat_free(res2);
 }
 
 void test_runner(TestFunction tests[], int num_tests) {

@@ -5,7 +5,7 @@ SRC_DIR := src
 TEST_DIR := test
 LIB_NAME := libapmath.so
 
-CFLAGS := -fPIC -Wall -Wextra -Werror -g -I$(SRC_DIR)
+CFLAGS := -fPIC -Wall -Wextra -Werror -I$(SRC_DIR)
 
 # Find all .c files in src and test directories
 SRC_FILES := $(wildcard $(SRC_DIR)/*.c)
