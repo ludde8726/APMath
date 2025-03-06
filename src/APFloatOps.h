@@ -18,24 +18,38 @@ APFloat *apfloat_add(APFloat *x, APFloat *y);
 
 // Addition function: Add two APFloats at a specified precision
 // Computes the sum of two APFloats using long addition  
-// Requires a specified precision; if it is not large enough to store the full result, undefined behavior may occur.  
+// Requires a specified precision and may modify the parameters  
 APFloat *apfloat_add_ex(APFloat *x, APFloat *y, uint32_t precision);
+APFloat *apfloat_add_impl(APFloat *x, APFloat *y, uint32_t precision);
+
 
 // Subtraction function: Subtract two APFloats
 // Computes the difference between two APFloats using long subtraction  
 // Note that this function works on the current working precision and may modify the parameters.  
-APFloat *apfloat_sub_ex(APFloat *x, APFloat *y, uint32_t precision);
+APFloat *apfloat_sub(APFloat *x, APFloat *y);
 
 // Subtraction function: Subtract two APFloats at a specified precision
-// Computes the difference between two APFloats using long subtraction  
-// Requires a specified precision; if it is not large enough to store the full result, undefined behavior may occur.  
-APFloat *apfloat_sub(APFloat *x, APFloat *y);
+// Computes the difference between two APFloats using long subtraction
+// Requires a specified precision and may modify the parameters
+APFloat *apfloat_sub_ex(APFloat *x, APFloat *y, uint32_t precision);
+APFloat *apfloat_sub_impl(APFloat *x, APFloat *y, uint32_t precision);
+
 
 APFloat *apfloat_mul(APFloat *x, APFloat *y);
 APFloat *apfloat_mul_ex(APFloat *x, APFloat *y, uint32_t precision);
+APFloat *apfloat_mul_impl(APFloat *x, APFloat *y, uint32_t precision);
+
+
 APFloat *apfloat_div(APFloat *x, APFloat *y);
 APFloat *apfloat_div_ex(APFloat *x, APFloat *y, uint32_t precision);
+APFloat *apfloat_div_impl(APFloat *x, APFloat *y, uint32_t precision);
+
+
 APFloat *apfloat_pow(APFloat *x, APFloat *y);
 APFloat *apfloat_pow_ex(APFloat *x, APFloat *y, uint32_t precision);
+APFloat *apfloat_pow_impl(APFloat *x, APFloat *y, uint32_t precision);
+
+
 APFloat *apfloat_log(APFloat *x, APFloat *base);
 APFloat *apfloat_log_ex(APFloat *x, APFloat *base);
+APFloat *apfloat_log_impl(APFloat *x, APFloat *base);

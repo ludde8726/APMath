@@ -38,56 +38,33 @@ APInt *apint_right_shift(APInt *x, uint32_t n);
 
 // Addition function: Add two APInts  
 // Computes the sum of two APInts using long addition  
-// Note that this function works on the current working precision and may modify the parameters.  
+// If the result of the operation is larger than UINT32_MAX undefined behaviour may occur
 APInt *apint_add(APInt *x, APInt *y);  
-
-// Addition function: Add two APInts with specified precision  
-// Computes the sum of two APInts using long addition  
-// Requires a specified precision; if it is not large enough to store the full result, undefined behavior may occur.  
-APInt *apint_add_ex(APInt *x, APInt *y, uint32_t precision);  
+APInt *apint_add_impl(APInt *x, APInt *y, uint32_t precision);  
 
 // Subtraction function: Subtract two APInts  
 // Computes the difference of two APInts using long subtraction  
-// Note that this function works on the current working precision and may modify the parameters.  
-APInt *apint_sub(APInt *x, APInt *y);  
-
-// Subtraction function: Subtract two APInts with specified precision  
-// Computes the difference of two APInts using long subtraction  
-// Requires a specified precision; if it is not large enough to store the full result, undefined behavior may occur.  
-APInt *apint_sub_ex(APInt *x, APInt *y, uint32_t precision);  
+// If the result of the operation is larger than UINT32_MAX undefined behaviour may occur
+APInt *apint_sub(APInt *x, APInt *y);    
+APInt *apint_sub_impl(APInt *x, APInt *y, uint32_t precision);  
 
 // Multiplication function: Multiply two APInts  
 // Computes the product of two APInts using long multiplication  
-// Note that this function works on the current working precision and may modify the parameters.  
+// If the result of the operation is larger than UINT32_MAX undefined behaviour may occur
 APInt *apint_mul(APInt *x, APInt *y);  
-
-// Multiplication function: Multiply two APInts with specified precision  
-// Computes the product of two APInts using long multiplication  
-// Requires a specified precision; if it is not large enough to store the full result, undefined behavior may occur.  
-APInt *apint_mul_ex(APInt *x, APInt *y, uint32_t precision);  
+APInt *apint_mul_impl(APInt *x, APInt *y, uint32_t precision);  
 
 // Division function: Divide two APInts  
 // Computes the quotient of two APInts using long division  
 // Stores the remainder in the provided pointer if not null  
-// Note that this function works on the current working precision and may modify the parameters.  
+// If the result of the operation is larger than UINT32_MAX undefined behaviour may occur
 APInt *apint_div(APInt *x, APInt *y, APInt **remainder);  
-
-// Division function: Divide two APInts with specified precision  
-// Computes the quotient of two APInts using long division  
-// Stores the remainder in the provided pointer if not null  
-// Requires a specified precision; if it is not large enough to store the full result, undefined behavior may occur.  
-APInt *apint_div_ex(APInt *x, APInt *y, APInt **remainder, uint32_t precision);  
+APInt *apint_div_impl(APInt *x, APInt *y, APInt **remainder, uint32_t precision);  
 
 // Exponentiation function: Compute x raised to the power of y  
 // Computes the power using the fast exponentiation algorithm (exponentiation by squaring),  
 // which repeatedly squares the base and reduces the exponent by half.  
-// Note that this function works on the current working precision and may modify the parameters.  
+// If the result of the operation is larger than UINT32_MAX undefined behaviour may occur
 APInt *apint_pow(APInt *x, APInt *y);
 
-// Exponentiation function: Compute x raised to the power of y  
-// Computes the power using the fast exponentiation algorithm (exponentiation by squaring),  
-// which repeatedly squares the base and reduces the exponent by half.  
-// Note that this function calculates the exact result which means that for
-// large operands (leading to results larger than ~1 000 000 000 digits) may cause some issues.
-APInt *apint_pow_exact(APInt *x, APInt *y);
 #endif

@@ -102,7 +102,7 @@ int apfloat_test_mul() {
 
         APFloat *apfloat_res = apfloat_mul(apfloat_x, apfloat_y);
 
-        if (!apfloat_almost_eq(apfloat_res, real_res)) return 0;
+        if (!apfloat_almost_eq(apfloat_res, real_res)) {printf("%Lf\n", real_res); print_apfloat(apfloat_res, REGULAR); return 0;}
 
         apfloat_free(apfloat_x);
         apfloat_free(apfloat_y);
@@ -116,6 +116,7 @@ int apfloat_test_div() {
     for (int i = 0; i < ITERATIONS; i++) {
         long long x_man = (long long)(rand() % (long long)(pow(10, PRECISION)-1)) - (long long)(pow(10, PRECISION)-1) / 2;
         long long y_man = (long long)(rand() % (long long)(pow(10, PRECISION)-1)) - (long long)(pow(10, PRECISION)-1) / 2;
+        if (y_man == 0) continue;
 
         long long x_exponent = (long long)(rand() % PRECISION) - PRECISION/2;
         long long y_exponent = (long long)(rand() % PRECISION) - PRECISION/2;

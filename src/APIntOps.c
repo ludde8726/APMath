@@ -62,34 +62,21 @@ APInt *apint_right_shift(APInt *x, uint32_t n) {
 #if 1
 
 APInt *apint_add(APInt *x, APInt *y) {
-    // Set working precision to 2 more then precision
-    uint32_t workprec = ctx.precision + 2;
-
-    // Resize operands, example:
-    // 123456 + 123456 calculated with global precision of 3 will resize to
-    // 1235 + 1235 = 2470, then resize to correct prec -> 247
-    // The same result would happen from calculating first and then resizing
-    // 123456 + 123456 = 246912, then resize to correct prec -> 247
-    // The reason for resizing early is to avoid unnecessary calculations
-    if (x->size > workprec-1) apint_resize(x, workprec-1);
-    if (y->size > workprec-1) apint_resize(y, workprec-1);
-    APInt *res = apint_add_ex(x, y, workprec);
-    apint_resize(res, ctx.precision);
-    return res;
+    return apint_add_impl(x, y, x->size >= y->size ? x->size+1 : y->size+1);
 }
 
-APInt *apint_add_ex(APInt *x, APInt *y, uint32_t precision) {
+APInt *apint_add_impl(APInt *x, APInt *y, uint32_t precision) {
     if (x->sign != y->sign) {
         if (x->sign == 1) { // y = -1
             APInt *pos_y = apint_copy_ex(y, y->capacity);
             pos_y->sign = 1;
-            APInt *res = apint_sub_ex(x, pos_y, precision);
+            APInt *res = apint_sub_impl(x, pos_y, precision);
             apint_free(pos_y);
             return res;
         } else { // x = -1
             APInt *pos_x = apint_copy_ex(x, x->capacity);
             pos_x->sign = 1;
-            APInt *res = apint_sub_ex(y, pos_x, precision);
+            APInt *res = apint_sub_impl(y, pos_x, precision);
             apint_free(pos_x);
             return res;
         }
@@ -116,20 +103,15 @@ APInt *apint_add_ex(APInt *x, APInt *y, uint32_t precision) {
 #if 1
 
 APInt *apint_sub(APInt *x, APInt *y) {
-    uint32_t workprec = ctx.precision + 2;
-    if (x->size > workprec-1) apint_resize(x, workprec-1);
-    if (y->size > workprec-1) apint_resize(y, workprec-1);
-    APInt *res = apint_sub_ex(x, y, workprec);
-    apint_resize(res, ctx.precision);
-    return res;
+    return apint_sub_impl(x, y, x->size >= y->size ? x->size+1 : y->size+1);
 }
 
-APInt *apint_sub_ex(APInt *x, APInt *y, uint32_t precision) {
+APInt *apint_sub_impl(APInt *x, APInt *y, uint32_t precision) {
     // If x and y have different signs, negate y and perfom an add
     if (x->sign != y->sign) {
         APInt *neg_y = apint_copy(y);
         neg_y->sign = -y->sign;
-        APInt *res = apint_add_ex(x, neg_y, precision);
+        APInt *res = apint_add_impl(x, neg_y, precision);
         apint_free(neg_y);
         return res;
     }
@@ -180,16 +162,10 @@ APInt *apint_sub_ex(APInt *x, APInt *y, uint32_t precision) {
 #if 1
 
 APInt *apint_mul(APInt *x, APInt *y) {
-    // For multiplication n + 1 significant digits is needed for the operands to achive correct result for n digits of precision
-    uint32_t workprec = ctx.precision * 2 + 2; 
-    if (x->size > ctx.precision + 1) apint_resize(x, ctx.precision + 1);
-    if (y->size > ctx.precision + 1) apint_resize(y, ctx.precision + 1);
-    APInt *res = apint_mul_ex(x, y, workprec);
-    apint_resize(res, ctx.precision);
-    return res;
+    return apint_mul_impl(x, y, x->size+y->size);
 }
 
-APInt *apint_mul_ex(APInt *x, APInt *y, uint32_t precision) {
+APInt *apint_mul_impl(APInt *x, APInt *y, uint32_t precision) {
     if (apint_is_zero(x) || apint_is_zero(y)) {
         APInt *zero = apint_init_ex(precision);
         zero->size = 1;
@@ -218,27 +194,10 @@ APInt *apint_mul_ex(APInt *x, APInt *y, uint32_t precision) {
 #if 1
 
 APInt *apint_div(APInt *x, APInt *y, APInt **remainder) {
-    uint32_t workprec = ctx.precision + 1;
-    // For division to be correct we need at least n+1 (significant) digits while also keeping the magnitude
-    if (x->size > workprec) {
-        uint32_t x_diff = x->size - workprec;
-        apint_right_shift_inplace(x, x_diff);
-        apint_left_shift_inplace(x, x_diff);
-    }
-    if (y->size > workprec) {
-        uint32_t y_diff = y->size - workprec;
-        apint_right_shift_inplace(y, y_diff);
-        apint_left_shift_inplace(y, y_diff);
-    }
-    // We have to perform the calculation on the biggest possible size of x or y.
-    // However we still normalize them as small as possible to not perform any unnecessary calculations.
-    workprec = x->size >= y->size ? x->size : y->size;
-    APInt *res = apint_div_ex(x, y, remainder, workprec);
-    apint_resize(res, ctx.precision);
-    return res;
+    return apint_div_impl(x, y, remainder, x->size >= y->size ? x->size : y->size);
 }
 
-APInt *apint_div_ex(APInt *x, APInt *y, APInt **remainder, uint32_t precicion) {
+APInt *apint_div_impl(APInt *x, APInt *y, APInt **remainder, uint32_t precicion) {
     if (apint_is_zero(y)) {
         fprintf(stderr, "Error: Division by zero.\n");
         exit(1);
@@ -266,7 +225,7 @@ APInt *apint_div_ex(APInt *x, APInt *y, APInt **remainder, uint32_t precicion) {
     for (int i = shift; i >= 0; i--) {
         int count = 0;
         while (apint_abs_compare(rem, shifted_y) >= 0) { // while dividend >= divisor 
-            APInt *new_rem = apint_sub_ex(rem, shifted_y, precicion);
+            APInt *new_rem = apint_sub_impl(rem, shifted_y, precicion);
             apint_free(rem);
             rem = new_rem;
             count++;
@@ -308,11 +267,11 @@ APInt *apint_pow(APInt *x, APInt *y) {
     while (!apint_is_zero(exponent)) {
         APInt *quotient = NULL;
         APInt *remainder = NULL;
-        quotient = apint_div(exponent, two, &remainder);
+        quotient = apint_div_impl(exponent, two, &remainder, exponent->size);
 
         if (!apint_is_zero(remainder)) {
             APInt *temp = res;
-            res = apint_mul(res, base);
+            res = apint_mul_impl(res, base, res->size + base->size);
             apint_free(temp);
         }
         apint_free(exponent);
@@ -320,48 +279,7 @@ APInt *apint_pow(APInt *x, APInt *y) {
         exponent = quotient;
         
         APInt *temp = base;
-        base = apint_mul(base, base);
-        apint_free(temp);
-    }
-    
-    apint_free(base);
-    apint_free(exponent);
-    apint_free(two);
-
-    return res;
-}
-
-APInt *apint_pow_exact(APInt *x, APInt *y) {
-    if (y->sign == -1) {
-        fprintf(stderr, "Error: Integer exponentiation only works on exponents greater than or equal to 0.\n");
-        exit(1);
-    }
-    APInt *base = apint_copy_ex(x, x->size);
-    APInt *exponent = apint_copy_ex(y, y->size);
-    APInt *two = apint_init_ex(1);
-    two->digits[0] = 2;
-    two->size = 1;
-
-    APInt *res = apint_init_ex(1);
-    res->digits[0] = 1;
-    res->size = 1;
-
-    while (!apint_is_zero(exponent)) {
-        APInt *quotient = NULL;
-        APInt *remainder = NULL;
-        quotient = apint_div_ex(exponent, two, &remainder, exponent->size);
-
-        if (!apint_is_zero(remainder)) {
-            APInt *temp = res;
-            res = apint_mul_ex(res, base, res->size + base->size);
-            apint_free(temp);
-        }
-        apint_free(exponent);
-        apint_free(remainder);
-        exponent = quotient;
-        
-        APInt *temp = base;
-        base = apint_mul_ex(base, base, base->size * 2);
+        base = apint_mul_impl(base, base, base->size * 2);
         apint_free(temp);
     }
     

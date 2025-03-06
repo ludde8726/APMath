@@ -216,7 +216,7 @@ void apfloat_normalize(APFloat *num) {
             apint_right_shift_inplace(num->significand, 1);
             num->exponent++;
         }
-    }
+    } else num->sign = 1;
 }
 
 int apfloat_is_zero(APFloat *num) {

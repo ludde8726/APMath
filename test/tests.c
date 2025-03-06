@@ -16,7 +16,7 @@ typedef int (*TestFunction)();
 
 void testing() {
     // Set precision to 5 (we don't need more)
-    ctx.precision = 10;
+    ctx.precision = 570;
     // Create two ints
     APFloat *small_float = apfloat_init();
     APFloat *small_float2 = apfloat_init();
@@ -32,7 +32,7 @@ void testing() {
     print_apfloat(small_float, REGULAR);
     print_apfloat(small_float2, REGULAR);
     APFloat *res = apfloat_div(small_float, small_float2);
-    print_apfloat(res, REGULAR);
+    print_apfloat(res, AUTO);
     printf("SZ: %d", res->significand->size);
 
     apfloat_free(small_float);

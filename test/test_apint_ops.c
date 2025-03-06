@@ -23,7 +23,6 @@ int apint_is_equal(APInt *num, long long int_num) {
 }
 
 int apint_test_create_from_int() {
-    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = RANDOM_NUMBER;
         APInt *apint_repr = apint_from_int(x);
@@ -34,7 +33,6 @@ int apint_test_create_from_int() {
 }
 
 int apint_test_add() {
-    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = RANDOM_NUMBER;
         long long y = RANDOM_NUMBER;
@@ -51,7 +49,6 @@ int apint_test_add() {
     return 1;
 }
 int apint_test_sub() {
-    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = RANDOM_NUMBER;
         long long y = RANDOM_NUMBER;
@@ -70,7 +67,6 @@ int apint_test_sub() {
 }
 
 int apint_test_mul() {
-    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = RANDOM_NUMBER;
         long long y = RANDOM_NUMBER;
@@ -89,7 +85,6 @@ int apint_test_mul() {
 }
 
 int apint_test_div() {
-    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
         int x = RANDOM_NUMBER;
         int y = RANDOM_NUMBER;
@@ -110,7 +105,6 @@ int apint_test_div() {
 }
 
 int apint_test_pow() {
-    ctx.precision = 16;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = (long long)(rand() % 20) - 10;
         long long y = (long long)(rand() % 10);
