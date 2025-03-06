@@ -16,25 +16,24 @@ typedef int (*TestFunction)();
 
 void testing() {
     // Set precision to 5 (we don't need more)
-    ctx.precision = 50;
+    ctx.precision = 10;
     // Create two ints
     APFloat *small_float = apfloat_init();
     APFloat *small_float2 = apfloat_init();
-    small_float->significand->digits[4] = 1;
-    small_float->significand->digits[3] = 1;
+    small_float->significand->digits[0] = 3;
+    small_float->significand->digits[1] = 2;
     small_float->significand->digits[2] = 1;
-    small_float->significand->size = 5;
-    small_float2->significand->digits[4] = 1;
-    small_float2->significand->digits[3] = 1;
-    small_float2->significand->digits[2] = 1;
-    small_float2->significand->size = 5;
-    small_float->exponent = -2;
-    small_float2->exponent = -3;
+    small_float->significand->size = 3;
+    small_float2->significand->digits[0] = 7;
+    small_float2->significand->size = 1;
+    small_float->exponent = -1;
+    small_float2->exponent = 100;
     // 11.100 + 111.00 = 122.10
     print_apfloat(small_float, REGULAR);
     print_apfloat(small_float2, REGULAR);
-    APFloat *res = apfloat_add(small_float, small_float2);
+    APFloat *res = apfloat_div(small_float, small_float2);
     print_apfloat(res, REGULAR);
+    printf("SZ: %d", res->significand->size);
 
     apfloat_free(small_float);
     apfloat_free(small_float2);
@@ -68,7 +67,7 @@ void test_runner(TestFunction tests[], int num_tests) {
 
 int main() {
     srand(time(NULL));
-    TestFunction tests[] = { apint_test_create_from_int, apint_test_add, apint_test_sub, apint_test_mul, apint_test_div, apint_test_pow, apfloat_test_add, apfloat_test_sub, apfloat_test_mul };
+    TestFunction tests[] = { apint_test_create_from_int, apint_test_add, apint_test_sub, apint_test_mul, apint_test_div, apint_test_pow, apfloat_test_add, apfloat_test_sub, apfloat_test_mul, apfloat_test_div };
     int num_tests = sizeof(tests) / sizeof(tests[0]);
     test_runner(tests, num_tests);
     printf("\n");

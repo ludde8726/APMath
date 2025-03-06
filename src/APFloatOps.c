@@ -119,6 +119,7 @@ APFloat *apfloat_sub_ex(APFloat *x, APFloat *y, uint32_t precision) {
 
 #endif
 
+// Multiplication
 #if 1
 
 APFloat *apfloat_mul(APFloat *x, APFloat *y) {
@@ -141,8 +142,50 @@ APFloat *apfloat_mul_ex(APFloat *x, APFloat *y, uint32_t precision) {
 
 #endif
 
-APFloat *apfloat_div(APFloat *x, APFloat *y);
-APFloat *apfloat_div_ex(APFloat *x, APFloat *y, uint32_t precision);
+// Division
+#if 1
+
+APFloat *apfloat_div(APFloat *x, APFloat *y) {
+    uint32_t workprec = ctx.precision + 1;
+
+    // For division to be correct we need at least n+1 (significant) digits while also keeping the magnitude,
+    // the magnitude is stored by increasing the exponent by the amount the size lowers which is done automatically
+    // inside of apfloat_resize
+    if (x->significand->size > workprec) apfloat_resize(x, workprec);
+    if (y->significand->size > workprec) apfloat_resize(y, workprec);
+
+    APFloat *res = apfloat_div_ex(x, y, workprec);
+    apfloat_resize(res, ctx.precision);
+    
+    return res;
+}
+
+APFloat *apfloat_div_ex(APFloat *x, APFloat *y, uint32_t precision) {
+    APInt *remainder;
+    APInt *initial_significand = apint_div_ex(x->significand, y->significand, &remainder, precision);
+    APFloat *res = apfloat_from_apint(initial_significand, x->exponent-y->exponent);
+
+    while (!apint_is_zero(remainder) && res->significand->size < precision) {
+        apint_left_shift_inplace(remainder, 1);
+        DIGITS_DTYPE count = 0;
+        while (apint_abs_compare(remainder, y->significand) >= 0) {
+            APInt *new_rem = apint_sub_ex(remainder, y->significand, precision);
+            apint_free(remainder);
+            remainder = new_rem;
+            count++;
+        }
+        apint_left_shift_inplace(res->significand, 1);
+        res->exponent--;
+        res->significand->digits[0] = count;
+    }
+    apint_free(remainder);
+    res->sign = x->sign == y->sign ? 1 : -1;
+    apfloat_normalize(res);
+    return res;
+}
+
+#endif
+
 APFloat *apfloat_pow(APFloat *x, APFloat *y);
 APFloat *apfloat_pow_ex(APFloat *x, APFloat *y, uint32_t precision);
 APFloat *apfloat_log(APFloat *x, APFloat *base);

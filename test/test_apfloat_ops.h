@@ -12,3 +12,4 @@ int apfloat_almost_eq(APFloat *num, long double float_num);
 int apfloat_test_add();
 int apfloat_test_sub();
 int apfloat_test_mul();
+int apfloat_test_div();
