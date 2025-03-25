@@ -65,6 +65,37 @@ APInt *apint_add(APInt *x, APInt *y) {
     return apint_add_impl(x, y, x->size >= y->size ? x->size+1 : y->size+1);
 }
 
+void apint_add_inplace(APInt *x, APInt *y) {
+    if (x->sign != y->sign) {
+        if (x->sign == 1) {
+            APInt *pos_y = apint_copy_ex(y, y->capacity);
+            pos_y->sign = 1;
+            apint_sub_inplace(x, pos_y);
+            apint_free(pos_y);
+            return;
+        } else {
+            APInt *pos_x = apint_copy_ex(x, x->capacity);
+            pos_x->sign = 1;
+            apint_sub_inplace(y, pos_x);
+            apint_copy_into_resize(x, y);
+            apint_free(pos_x);
+            return;
+        }
+    }
+    uint32_t max_size = x->size > y->size ? x->size + 1 : y->size + 1;
+    DIGITS_DTYPE carry = 0;
+    for (uint32_t i = 0; (i < x->size || i < y->size || carry); i++) {
+        DIGITS_DTYPE sum = carry;
+        if (i < x->size) sum += x->digits[i];
+        if (i < y->size) sum += y->digits[i];
+        if (i >= x->capacity) apint_resize(x, x->capacity+1);
+        x->digits[i] = sum % 10;
+        carry = sum / 10;
+    }
+    x->size = max_size;
+    apint_normalize(x);
+}
+
 APInt *apint_add_impl(APInt *x, APInt *y, uint32_t precision) {
     if (x->sign != y->sign) {
         if (x->sign == 1) { // y = -1
@@ -106,10 +137,52 @@ APInt *apint_sub(APInt *x, APInt *y) {
     return apint_sub_impl(x, y, x->size >= y->size ? x->size+1 : y->size+1);
 }
 
+void apint_sub_inplace(APInt *x, APInt *y) {
+    if (x->sign != y->sign) {
+        APInt *neg_y = apint_copy_ex(y, y->capacity);
+        neg_y->sign = -y->sign;
+        apint_add_inplace(x, neg_y);
+        apint_free(neg_y);
+        return;
+    }
+    
+    int cmp = apint_abs_compare(x, y);
+    if (cmp == 0) {
+        x->size = 1;
+        x->digits[0] = 0;
+        x->sign = 1;
+        return;
+    }
+    
+    const APInt *larger = x, *smaller = y;
+    int result_sign = x->sign;
+    if (cmp < 0) {
+        larger = y;
+        smaller = x;
+        result_sign = -result_sign;
+    }
+    
+    int borrow = 0;
+    for (size_t i = 0; i < larger->size; i++) {
+        int diff = larger->digits[i] - borrow;
+        if (i < smaller->size) diff -= smaller->digits[i];
+        
+        if (diff < 0) {
+            diff += 10;
+            borrow = 1;
+        } else borrow = 0;
+        
+        x->digits[i] = diff;
+    }
+    x->size = larger->size;
+    x->sign = result_sign;
+    apint_normalize(x);
+}
+
 APInt *apint_sub_impl(APInt *x, APInt *y, uint32_t precision) {
     // If x and y have different signs, negate y and perfom an add
     if (x->sign != y->sign) {
-        APInt *neg_y = apint_copy(y);
+        APInt *neg_y = apint_copy_ex(y, precision);
         neg_y->sign = -y->sign;
         APInt *res = apint_add_impl(x, neg_y, precision);
         apint_free(neg_y);
@@ -144,7 +217,7 @@ APInt *apint_sub_impl(APInt *x, APInt *y, uint32_t precision) {
         int diff = larger->digits[i] - borrow;
         if (i < smaller->size) diff -= smaller->digits[i];
 
-        // If diff it negative, borrow 10 from the next digit (note that we always know this will work since we always do larger - smaller)
+        // If diff is negative, borrow 10 from the next digit (note that we always know this will work since we always do larger - smaller)
         if (diff < 0) {
             diff += 10;
             borrow = 1;
@@ -225,9 +298,9 @@ APInt *apint_div_impl(APInt *x, APInt *y, APInt **remainder, uint32_t precicion)
     for (int i = shift; i >= 0; i--) {
         int count = 0;
         while (apint_abs_compare(rem, shifted_y) >= 0) { // while dividend >= divisor 
-            APInt *new_rem = apint_sub_impl(rem, shifted_y, precicion);
-            apint_free(rem);
-            rem = new_rem;
+            apint_sub_inplace(rem, shifted_y);
+            // apint_free(rem);
+            // rem = new_rem;
             count++;
         }
         res->digits[i] = count;

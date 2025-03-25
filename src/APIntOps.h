@@ -47,6 +47,7 @@ APInt *apint_add_impl(APInt *x, APInt *y, uint32_t precision);
 // If the result of the operation is larger than UINT32_MAX undefined behaviour may occur
 APInt *apint_sub(APInt *x, APInt *y);    
 APInt *apint_sub_impl(APInt *x, APInt *y, uint32_t precision);  
+void apint_sub_inplace(APInt *x, APInt *y);
 
 // Multiplication function: Multiply two APInts  
 // Computes the product of two APInts using long multiplication  

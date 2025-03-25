@@ -1,9 +1,12 @@
 #include <stdint.h>
+#include <math.h>
+#include <stdlib.h>
 
 #include "APCtx.h"
 #include "APFloatOps.h"
 #include "APIntOps.h"
 #include "APNumber.h"
+#include "APHelpers.h"
 
 void apfloat_align(APFloat *x, APFloat *y) {
     if (x->exponent > y->exponent) {
@@ -208,9 +211,7 @@ APFloat *apfloat_div_impl(APFloat *x, APFloat *y, uint32_t precision) {
         apint_left_shift_inplace(remainder, 1);
         DIGITS_DTYPE count = 0;
         while (apint_abs_compare(remainder, y->significand) >= 0) {
-            APInt *new_rem = apint_sub_impl(remainder, y->significand, precision);
-            apint_free(remainder);
-            remainder = new_rem;
+            apint_sub_inplace(remainder, y->significand);
             count++;
         }
         apint_left_shift_inplace(res->significand, 1);
@@ -225,7 +226,105 @@ APFloat *apfloat_div_impl(APFloat *x, APFloat *y, uint32_t precision) {
 
 #endif
 
-APFloat *apfloat_pow(APFloat *x, APFloat *y);
-APFloat *apfloat_pow_impl(APFloat *x, APFloat *y, uint32_t precision);
+// Exponentiation
+#if 1
+
+APFloat *apfloat_pow(APFloat *x, APInt *y) {
+    // Since we basically perform multiplications multiple times we need to set the precision for the multiplications to n + 1
+    uint32_t workprec = ctx.precision + 1;
+    if (x->significand->size > ctx.precision + y->size) apfloat_resize(x, ctx.precision + y->size);
+
+    APFloat *res = apfloat_pow_impl(x, y, workprec);
+    apfloat_resize(res, ctx.precision);
+    return res;
+}
+
+APFloat *apfloat_pow_ex(APFloat *x, APInt *y, uint32_t precision) {
+    uint32_t workprec = precision + 1;
+    if (x->significand->size > precision + y->size) apfloat_resize(x, precision + y->size);
+
+    APFloat *res = apfloat_pow_impl(x, y, workprec);
+    apfloat_resize(res, precision);
+    return res;
+}
+
+APFloat *apfloat_pow_impl(APFloat *x, APInt *y, uint32_t precision) {
+    if (y->size > 19 || (y->size == 19 && y->digits[19] >= 9)) {
+        fprintf(stderr, "Maximum exponent allowed is 8,999,999,999,999,999,999");
+        exit(EXIT_FAILURE);
+    }
+    APInt *base = apint_copy_ex(x->significand, x->significand->size);
+    APInt *exponent = apint_copy_ex(y, y->size);
+    APInt *two = apint_init_ex(1);
+    two->digits[0] = 2;
+    two->size = 1;
+    
+    APInt *res = apint_init_ex(1);
+    res->digits[0] = 1;
+    res->size = 1;
+    
+    int64_t y_as_int = 0;
+    for (uint32_t i = y->size; i > 0; i--) y_as_int += (int64_t)(y->digits[i-1] * powl(10, i-1));
+    int64_t res_exponent = x->exponent * y_as_int;
+    if (!((res_exponent < 0 && x->exponent < 0) || (res_exponent >= 0 && x->exponent >= 0))) {
+        fprintf(stderr, "Exponent integer overflow!\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    while (!apint_is_zero(exponent)) {
+        APInt *quotient = NULL;
+        APInt *remainder = NULL;
+        quotient = apint_div_impl(exponent, two, &remainder, exponent->size);
+        
+        if (!apint_is_zero(remainder)) {
+            APInt *temp = res;
+            res = apint_mul_impl(res, base, res->size + base->size);
+            if (res->size > precision) {
+                res_exponent += (int64_t)(res->size - precision);
+                apint_resize(res, precision);
+            }
+            apint_free(temp);
+        }
+        apint_free(exponent);
+        apint_free(remainder);
+        exponent = quotient;
+        
+        APInt *temp = base;
+        base = apint_mul_impl(base, base, base->size * 2);
+        apint_free(temp);
+    }
+    
+    apint_free(base);
+    apint_free(exponent);
+    apint_free(two);
+    
+    apint_resize(res, res->size);
+    APFloat *apfloat_repr = apfloat_from_apint(res, res_exponent);
+    apfloat_normalize(apfloat_repr);
+    
+    if (y->sign == -1) {
+        APFloat *one = apfloat_init_ex(1);
+        one->significand->digits[0] = 1;
+        one->significand->size = 1;
+        APFloat *res_inverse = apfloat_div_impl(one, apfloat_repr, precision);
+
+        apfloat_free(apfloat_repr);
+        apfloat_free(one);
+
+        apfloat_normalize(res_inverse);
+        return res_inverse;
+    }
+    
+    return apfloat_repr;
+}
+
+#endif
+
 APFloat *apfloat_log(APFloat *x, APFloat *base);
 APFloat *apfloat_log_impl(APFloat *x, APFloat *base);
+
+// APFloat *apfloat_e_ex(uint32_t precicion) {
+//     // Use formula e = 2 + 1/2! + 1/3! + 1/4! ...
+//     // Continue adding more terms while 1/n! is greater than 10^-(prec-1) i think
+//     APFloat *res = apfloat_init_ex(precicion);
+// }

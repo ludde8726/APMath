@@ -16,23 +16,29 @@ typedef int (*TestFunction)();
 
 void testing() {
     // Set precision to 5 (we don't need more)
-    ctx.precision = 570;
+    ctx.precision = 2;
     // Create two ints
     APFloat *small_float = apfloat_init();
     APFloat *small_float2 = apfloat_init();
+    APInt *small_int2 = apint_init();
     small_float->significand->digits[0] = 3;
     small_float->significand->digits[1] = 2;
-    small_float->significand->digits[2] = 1;
-    small_float->significand->size = 3;
-    small_float2->significand->digits[0] = 7;
+    small_float->significand->size = 2;
+    small_float->exponent = -2;
+
+    small_float2->significand->digits[0] = 1;
     small_float2->significand->size = 1;
-    small_float->exponent = -1;
-    small_float2->exponent = 100;
-    // 11.100 + 111.00 = 122.10
+    small_float2->exponent = 0;
+
+    small_int2->digits[0] = 3;
+    small_int2->size = 1;
+    small_int2->sign = 1;
+
     print_apfloat(small_float, REGULAR);
     print_apfloat(small_float2, REGULAR);
-    APFloat *res = apfloat_div(small_float, small_float2);
-    print_apfloat(res, AUTO);
+
+    APFloat *res = apfloat_pow(small_float, small_int2);
+    print_apfloat(res, REGULAR);
     printf("SZ: %d", res->significand->size);
 
     apfloat_free(small_float);

@@ -62,6 +62,18 @@ APInt *apint_copy_ex(APInt *num, uint32_t precision) {
     return res;
 }
 
+void apint_copy_into(APInt *x, APInt *y) {
+    if (x->capacity < y->size) memcpy(x->digits, y->digits + (y->size - x->capacity), x->capacity * sizeof(DIGITS_DTYPE));
+    else memcpy(x->digits, y->digits, y->size * sizeof(DIGITS_DTYPE));
+    x->size = y->size;
+    x->sign = y->sign;
+}
+
+void apint_copy_into_resize(APInt *x, APInt *y) {
+    apint_resize(x, y->capacity);
+    apint_copy_into(x, y);
+}
+
 int apint_resize(APInt *num, uint32_t precision) {
     DIGITS_DTYPE *new_digits = calloc(precision, sizeof(DIGITS_DTYPE));
     if (!new_digits) return 0; // Memory allocation failed.
@@ -79,8 +91,6 @@ int apint_resize(APInt *num, uint32_t precision) {
     apint_normalize(num);
     return 1;
 }
-
-APInt *apint_from_string(const char *str);
 
 APInt *apint_from_int(long long num) {
     // Create an apint from a regular int
