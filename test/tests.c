@@ -16,7 +16,7 @@ typedef int (*TestFunction)();
 
 void testing() {
     // Set precision to 5 (we don't need more)
-    ctx.precision = 2;
+    ctx.precision = 5;
     // Create two ints
     APFloat *small_float = apfloat_init();
     APFloat *small_float2 = apfloat_init();
@@ -26,34 +26,24 @@ void testing() {
     small_float->significand->size = 2;
     small_float->exponent = -2;
 
-    small_float2->significand->digits[0] = 1;
+    small_float2->significand->digits[0] = 2;
     small_float2->significand->size = 1;
     small_float2->exponent = 0;
 
     small_int2->digits[0] = 3;
     small_int2->size = 1;
-    small_int2->sign = 1;
+    small_int2->sign = -1;
 
     print_apfloat(small_float, REGULAR);
     print_apfloat(small_float2, REGULAR);
 
     APFloat *res = apfloat_pow(small_float, small_int2);
     print_apfloat(res, REGULAR);
-    printf("SZ: %d", res->significand->size);
 
     apfloat_free(small_float);
     apfloat_free(small_float2);
     apfloat_free(res);
 
-    APFloat *small_float3 = apfloat_init();
-    small_float3->significand->digits[0] = 1;
-    small_float3->significand->size = 1;
-    APFloat *small_float4 = apfloat_init();
-
-    APFloat *res2 = apfloat_mul(small_float3, small_float4);
-    apfloat_free(small_float3);
-    apfloat_free(small_float4);
-    apfloat_free(res2);
 }
 
 void test_runner(TestFunction tests[], int num_tests) {

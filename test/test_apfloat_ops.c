@@ -102,7 +102,7 @@ int apfloat_test_mul() {
 
         APFloat *apfloat_res = apfloat_mul(apfloat_x, apfloat_y);
 
-        if (!apfloat_almost_eq(apfloat_res, real_res)) {printf("%Lf\n", real_res); print_apfloat(apfloat_res, REGULAR); return 0;}
+        if (!apfloat_almost_eq(apfloat_res, real_res)) return 0;
 
         apfloat_free(apfloat_x);
         apfloat_free(apfloat_y);

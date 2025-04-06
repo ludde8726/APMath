@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "APCtx.h"
 #include "APFloatOps.h"
@@ -43,7 +44,7 @@ APFloat *apfloat_add(APFloat *x, APFloat *y) {
     apfloat_resize(x, workprec-1);
     apfloat_resize(y, workprec-1); 
     APFloat *res = apfloat_add_impl(x, y, workprec);
-    apfloat_resize(res, ctx.precision);
+    apfloat_round_resize(res, ctx.precision);
     return res;
 }
 
@@ -52,7 +53,7 @@ APFloat *apfloat_add_ex(APFloat *x, APFloat *y, uint32_t precision) {
     apfloat_resize(x, workprec-1);
     apfloat_resize(y, workprec-1); 
     APFloat *res = apfloat_add_impl(x, y, workprec);
-    apfloat_resize(res, precision);
+    apfloat_round_resize(res, precision);
     return res;
 }
 
@@ -92,7 +93,7 @@ APFloat *apfloat_sub(APFloat *x, APFloat *y) {
     apfloat_resize(x, workprec-1);
     apfloat_resize(y, workprec-1); 
     APFloat *res = apfloat_sub_impl(x, y, workprec);
-    apfloat_resize(res, ctx.precision);
+    apfloat_round_resize(res, ctx.precision);
     return res;
 }
 
@@ -101,7 +102,7 @@ APFloat *apfloat_sub_ex(APFloat *x, APFloat *y, uint32_t precision) {
     apfloat_resize(x, workprec-1);
     apfloat_resize(y, workprec-1); 
     APFloat *res = apfloat_sub_impl(x, y, workprec);
-    apfloat_resize(res, precision);
+    apfloat_round_resize(res, precision);
     return res;
 }
 
@@ -151,7 +152,7 @@ APFloat *apfloat_mul(APFloat *x, APFloat *y) {
     if (x->significand->size > ctx.precision + 1) apfloat_resize(x, ctx.precision + 1);
     if (y->significand->size > ctx.precision + 1) apfloat_resize(y, ctx.precision + 1);
     APFloat *res = apfloat_mul_impl(x, y, workprec);
-    apfloat_resize(res, ctx.precision);
+    apfloat_round_resize(res, ctx.precision);
     return res;
 }
 
@@ -160,7 +161,7 @@ APFloat *apfloat_mul_ex(APFloat *x, APFloat *y, uint32_t precision) {
     if (x->significand->size > ctx.precision + 1) apfloat_resize(x, ctx.precision + 1);
     if (y->significand->size > ctx.precision + 1) apfloat_resize(y, ctx.precision + 1);
     APFloat *res = apfloat_mul_impl(x, y, workprec);
-    apfloat_resize(res, precision);
+    apfloat_round_resize(res, precision);
     return res;
 }
 
@@ -178,27 +179,25 @@ APFloat *apfloat_mul_impl(APFloat *x, APFloat *y, uint32_t precision) {
 #if 1
 
 APFloat *apfloat_div(APFloat *x, APFloat *y) {
-    uint32_t workprec = ctx.precision + 1;
+    uint32_t workprec = ctx.precision + 2;
 
     // For division to be correct we need at least n+1 (significant) digits while also keeping the magnitude,
     // the magnitude is stored by increasing the exponent by the amount the size lowers which is done automatically
     // inside of apfloat_resize
-    if (x->significand->size > workprec) apfloat_resize(x, workprec);
-    if (y->significand->size > workprec) apfloat_resize(y, workprec);
-
+    // However because of the poor implementation we need at least n+2 (significant) digits when dividing.
+    apfloat_resize(x, workprec);
+    apfloat_resize(y, workprec);
     APFloat *res = apfloat_div_impl(x, y, workprec);
-    apfloat_resize(res, ctx.precision);
-    
+    apfloat_round_resize(res, ctx.precision);
     return res;
 }
 
 APFloat *apfloat_div_ex(APFloat *x, APFloat *y, uint32_t precision) {
-    uint32_t workprec = precision + 1;
+    uint32_t workprec = precision + 2;
     if (x->significand->size > workprec) apfloat_resize(x, workprec);
     if (y->significand->size > workprec) apfloat_resize(y, workprec);
-
     APFloat *res = apfloat_div_impl(x, y, workprec);
-    apfloat_resize(res, precision);
+    apfloat_round_resize(res, precision);
     return res;
 }
 
@@ -206,15 +205,17 @@ APFloat *apfloat_div_impl(APFloat *x, APFloat *y, uint32_t precision) {
     APInt *remainder;
     APInt *initial_significand = apint_div_impl(x->significand, y->significand, &remainder, precision);
     APFloat *res = apfloat_from_apint(initial_significand, x->exponent-y->exponent);
-
+    bool should_shift = !apint_is_zero(initial_significand);
     while (!apint_is_zero(remainder) && res->significand->size < precision) {
-        apint_left_shift_inplace(remainder, 1);
+        if (remainder->size < precision) apint_left_shift_inplace(remainder, 1);
+        else apint_right_shift_inplace(y->significand, 1);
         DIGITS_DTYPE count = 0;
         while (apint_abs_compare(remainder, y->significand) >= 0) {
             apint_sub_inplace(remainder, y->significand);
             count++;
         }
-        apint_left_shift_inplace(res->significand, 1);
+        if (should_shift) apint_left_shift_inplace(res->significand, 1);
+        if (count) should_shift = true;
         res->exponent--;
         res->significand->digits[0] = count;
     }
@@ -235,7 +236,7 @@ APFloat *apfloat_pow(APFloat *x, APInt *y) {
     if (x->significand->size > ctx.precision + y->size) apfloat_resize(x, ctx.precision + y->size);
 
     APFloat *res = apfloat_pow_impl(x, y, workprec);
-    apfloat_resize(res, ctx.precision);
+    apfloat_round_resize(res, ctx.precision);
     return res;
 }
 
@@ -244,7 +245,7 @@ APFloat *apfloat_pow_ex(APFloat *x, APInt *y, uint32_t precision) {
     if (x->significand->size > precision + y->size) apfloat_resize(x, precision + y->size);
 
     APFloat *res = apfloat_pow_impl(x, y, workprec);
-    apfloat_resize(res, precision);
+    apfloat_round_resize(res, precision);
     return res;
 }
 
@@ -303,14 +304,13 @@ APFloat *apfloat_pow_impl(APFloat *x, APInt *y, uint32_t precision) {
     apfloat_normalize(apfloat_repr);
     
     if (y->sign == -1) {
-        APFloat *one = apfloat_init_ex(1);
+        APFloat *one = apfloat_init_ex(1); 
         one->significand->digits[0] = 1;
         one->significand->size = 1;
         APFloat *res_inverse = apfloat_div_impl(one, apfloat_repr, precision);
 
         apfloat_free(apfloat_repr);
         apfloat_free(one);
-
         apfloat_normalize(res_inverse);
         return res_inverse;
     }

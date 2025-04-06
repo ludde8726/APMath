@@ -74,6 +74,22 @@ void apint_copy_into_resize(APInt *x, APInt *y) {
     apint_copy_into(x, y);
 }
 
+void apint_round_at_n(APInt *x, uint32_t n) {
+    if (x->digits[x->size - n - 1] >= 5) {
+        uint32_t carry = 1;
+        for (uint32_t i = x->size - n; i < x->size; i++) {
+            uint32_t sum = x->digits[i] + carry;
+            x->digits[i] = sum % 10;
+            carry = sum / 10;
+            if (!carry) break;
+        }
+        if (carry) {
+            memset(x->digits + x->size - n, 0, n);
+            x->digits[x->size-1] = 1;
+        }
+    }
+}
+
 int apint_resize(APInt *num, uint32_t precision) {
     DIGITS_DTYPE *new_digits = calloc(precision, sizeof(DIGITS_DTYPE));
     if (!new_digits) return 0; // Memory allocation failed.
@@ -90,6 +106,11 @@ int apint_resize(APInt *num, uint32_t precision) {
     num->capacity = precision;
     apint_normalize(num);
     return 1;
+}
+
+int apint_round_resize(APInt *num, uint32_t precision) {
+    apint_round_at_n(num, precision);
+    return apint_resize(num, precision);
 }
 
 APInt *apint_from_int(long long num) {
@@ -187,9 +208,35 @@ APFloat *apfloat_copy_ex(APFloat *num, uint32_t precision) {
     return res;
 }
 
+void apfloat_round(APFloat *x, uint32_t n) {
+    if (n > x->significand->size) {
+        fprintf(stderr, "Cannot round apfloat to more digits than it's current size (%d -> %d).", x->significand->size, n);
+        exit(EXIT_FAILURE);
+    }
+    if (x->significand->digits[x->significand->size - n - 1] >= 5) {
+        uint32_t carry = 1;
+        for (uint32_t i = x->significand->size - n; i < x->significand->size; i++) {
+            uint32_t sum = x->significand->digits[i] + carry;
+            x->significand->digits[i] = sum % 10;
+            carry = sum / 10;
+            if (!carry) break;
+        }
+        if (carry) {
+            memset(x->significand->digits + x->significand->size - n, 0, n);
+            x->significand->digits[x->significand->size-1] = 1;
+            x->exponent++;
+        }
+    }
+}
+
 int apfloat_resize(APFloat *num, uint32_t precision) {
     if (num->significand->size > precision) num->exponent += num->significand->size - precision;
     return apint_resize(num->significand, precision);
+}
+
+int apfloat_round_resize(APFloat *num, uint32_t precision) {
+    if (num->significand->size > precision) apfloat_round(num, precision);
+    return apfloat_resize(num, precision);
 }
 
 APFloat *apfloat_from_apint(APInt *num, int64_t exponent) {

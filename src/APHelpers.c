@@ -93,7 +93,12 @@ char *apfloat_to_string(APFloat *num, enum PrintType print_type) {
 
         return res;
     } else {
-        if (num->exponent >= 0) {
+        if (apfloat_is_zero(num)) { 
+            // Hack to allow free to always be called on the return
+            char *res = (char*)malloc(4 * sizeof(char));
+            snprintf(res, 4, "0.0");
+            return res;
+        } else if (num->exponent >= 0) {
             // If the exponent is grater than 0 we have trailing zeros
             int extra_space = num->exponent + 3; // We allocate space for the zeroes aswell as a .0 at the end
             char *res = (char*)malloc((num->significand->size + extra_space) * sizeof(char));
