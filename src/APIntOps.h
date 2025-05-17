@@ -14,7 +14,7 @@ int apint_abs_compare(const APInt *x, const APInt *y);
 // In-place left shift: Multiply the number by 10^n.
 // This is achieved by shifting the digits right in the digits array (toward higher indices).
 // Note that this function modifies x.
-void apint_left_shift_inplace(APInt *x, uint32_t n);
+bool apint_left_shift_inplace(APInt *x, uint32_t n);
 
 // In-place right shift: Divide the number by 10^n.
 // This is achieved by shifting the digits left in the digits array (toward lower indices).
@@ -41,13 +41,14 @@ APInt *apint_right_shift(APInt *x, uint32_t n);
 // If the result of the operation is larger than UINT32_MAX undefined behaviour may occur
 APInt *apint_add(APInt *x, APInt *y);  
 APInt *apint_add_impl(APInt *x, APInt *y, uint32_t precision);  
+bool apint_add_inplace(APInt *x, APInt *y);
 
 // Subtraction function: Subtract two APInts  
 // Computes the difference of two APInts using long subtraction  
 // If the result of the operation is larger than UINT32_MAX undefined behaviour may occur
 APInt *apint_sub(APInt *x, APInt *y);    
 APInt *apint_sub_impl(APInt *x, APInt *y, uint32_t precision);  
-void apint_sub_inplace(APInt *x, APInt *y);
+bool apint_sub_inplace(APInt *x, APInt *y);
 
 // Multiplication function: Multiply two APInts  
 // Computes the product of two APInts using long multiplication  

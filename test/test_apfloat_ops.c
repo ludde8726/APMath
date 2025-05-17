@@ -16,7 +16,7 @@ int apfloat_almost_eq(APFloat *num, long double float_num) {
     int float_sign = float_num < 0 ? -1 : 1;
     if (float_sign != num->sign) return 0;
     long long num_as_int = 0;
-    for (uint32_t i = 0; i < num->significand->size; i++) num_as_int += (long long)num->significand->digits[i] * (long long)pow(10, i);
+    for (uint32_t i = 0; i < APF_SZ(num); i++) num_as_int += (long long)APF_DIG(num)[i] * (long long)pow(10, i);
     long double num_as_float = num->sign * (long double)num_as_int * powl(10, num->exponent);
     return fabsl(float_num - num_as_float) < powl(10, num->exponent+1);
 }

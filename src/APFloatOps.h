@@ -9,7 +9,7 @@
 // ensuring that subsequent arithmetic operations (like addition or subtraction)
 // can be performed accurately.
 // Note that this function operates at the current working precision and some precision may be lost.
-void apfloat_align(APFloat *x, APFloat *y);
+bool apfloat_align(APFloat *x, APFloat *y);
 
 // Addition function: Add two APFloats
 // Computes the sum of two APFloats using long addition  

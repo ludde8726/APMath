@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #define DIGITS_DTYPE uint8_t
 #define DEBUG_PRINT_APINT(x)                 \
@@ -10,6 +11,10 @@
             printf("%d", (x)->digits[i - 1]);    \
         printf("\n");                             \
     } while (0)
+
+#define APF_SZ(x) x->significand->size
+#define APF_DIG(x) x->significand->digits
+#define APF_CAP(x) x->significand->capacity
 
 // Struct for reprecenting large ints.
 // sign = 1 or -1
@@ -43,38 +48,37 @@ typedef struct {
 } APComplex;
 
 // Int helpers
-APInt *apint_init();
+APInt *apint_init(void);
 APInt *apint_init_ex(uint32_t precision);
-APInt *apint_copy(APInt *num);
-APInt *apint_copy_ex(APInt *num, uint32_t precision);
+APInt *apint_copy(APInt *x);
+APInt *apint_copy_ex(APInt *x, uint32_t precision);
 void apint_copy_into(APInt *x, APInt *y);
-void apint_copy_into_resize(APInt *x, APInt *y);
-void apint_round_at_n(APInt *x, uint32_t n);
-int apint_resize(APInt *num, uint32_t precision);
-int apint_round_resize(APInt *num, uint32_t precision);
+bool apint_copy_into_resize(APInt *x, APInt *y);
+bool apint_round_at_n(APInt *x, uint32_t n);
+bool apint_resize(APInt *x, uint32_t precision);
+bool apint_round_resize(APInt *x, uint32_t precision);
 APInt *apint_from_int(long long num);
-void apint_free(APInt *num);
-void apint_normalize(APInt *num);
-int apint_is_zero(APInt *num);
+void apint_free(APInt *x);
+void apint_normalize(APInt *x);
+bool apint_is_zero(APInt *x);
 
 // Float helpers
-APFloat *apfloat_init();
+APFloat *apfloat_init(void);
 APFloat *apfloat_init_ex(uint32_t precision);
-APFloat *apfloat_init_empty();
-APFloat *apfloat_copy(APFloat *num);
-APFloat *apfloat_copy_ex(APFloat *num, uint32_t precision);
-void apfloat_round(APFloat *x, uint32_t n);
-int apfloat_resize(APFloat *num, uint32_t precision);
-int apfloat_round_resize(APFloat *num, uint32_t precision);
-APFloat *apfloat_from_apint(APInt *num, int64_t exponent);
-APFloat *apfloat_from_apint_ex(APInt *num, int64_t exponent, uint32_t precision);
-void apfloat_free(APFloat *num);
-void apfloat_normalize(APFloat *num);
-int apfloat_is_zero(APFloat *num);
-int apfloat_is_int(APFloat *num);
+APFloat *apfloat_copy(APFloat *x);
+APFloat *apfloat_copy_ex(APFloat *x, uint32_t precision);
+bool apfloat_round(APFloat *x, uint32_t n);
+bool apfloat_resize(APFloat *x, uint32_t precision);
+bool apfloat_round_resize(APFloat *x, uint32_t precision);
+APFloat *apfloat_from_apint(APInt *x, int64_t exponent);
+APFloat *apfloat_from_apint_ex(APInt *x, int64_t exponent, uint32_t precision);
+void apfloat_free(APFloat *x);
+void apfloat_normalize(APFloat *x);
+bool apfloat_is_zero(APFloat *x);
+bool apfloat_is_int(APFloat *x);
 
 // Complex helpers
-APComplex *apcomplex_init();
+APComplex *apcomplex_init(void);
 APComplex *apcomplex_init_ex(uint32_t precision);
-APComplex *apcomplex_copy(APComplex *num);
-void apcomplex_free(APComplex *num);
+APComplex *apcomplex_copy(APComplex *x);
+void apcomplex_free(APComplex *x);
