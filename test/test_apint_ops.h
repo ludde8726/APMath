@@ -7,9 +7,9 @@
 
 int apint_is_equal(APInt *num, long long int_num);
 
-int apint_test_create_from_int();
-int apint_test_add();
-int apint_test_sub();
-int apint_test_mul();
-int apint_test_div();
-int apint_test_pow();
+int apint_test_create_from_int(void);
+int apint_test_add(void);
+int apint_test_sub(void);
+int apint_test_mul(void);
+int apint_test_div(void);
+int apint_test_pow(void);

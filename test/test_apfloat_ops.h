@@ -9,7 +9,7 @@
 
 int apfloat_almost_eq(APFloat *num, long double float_num);
 
-int apfloat_test_add();
-int apfloat_test_sub();
-int apfloat_test_mul();
-int apfloat_test_div();
+int apfloat_test_add(void);
+int apfloat_test_sub(void);
+int apfloat_test_mul(void);
+int apfloat_test_div(void);

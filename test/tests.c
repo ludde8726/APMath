@@ -13,11 +13,11 @@
 #include "test_apint_ops.h"
 #include "test_apfloat_ops.h"
 
-typedef int (*TestFunction)();
+typedef int (*TestFunction)(void);
 
-void testing() {
-    // Set precision to 5 (we don't need more)
-    ctx.precision = 5;
+void testing(void) {
+    // Set precision to 10 (we don't need more)
+    ctx.precision = 10;
     // Create two ints
     APFloat *small_float = apfloat_init();
     APFloat *small_float2 = apfloat_init();
@@ -38,12 +38,12 @@ void testing() {
     print_apfloat(small_float, REGULAR);
     print_apfloat(small_float2, REGULAR);
 
-    // APFloat *res = apfloat_pow(small_float, small_int2);
-    // print_apfloat(res, REGULAR);
+    APFloat *res = apfloat_pow(small_float, small_int2);
+    print_apfloat(res, REGULAR);
 
     apfloat_free(small_float);
     apfloat_free(small_float2);
-    // apfloat_free(res);
+    apfloat_free(res);
 
     APFloat *numes = apfloat_init();
     APF_DIG(numes)[0] = 3;
@@ -54,20 +54,23 @@ void testing() {
     apfloat_free(numes);
 
     APInt *sint = apint_init();
-    sint->digits[0] = 4;
-    sint->size = 1;
+    sint->digits[3] = 4;
+    sint->size = 4;
 
-    APInt *sint2 = apint_init();
-    sint2->digits[2] = 1;
-    sint2->digits[3] = 7;
-    sint2->digits[4] = 7;
-    sint2->digits[5] = 7;
-    sint2->digits[6] = 7;
-    sint2->size = 7;
+    APFloat *sint2 = apfloat_init();
+    sint2->significand->digits[2] = 1;
+    sint2->significand->digits[3] = 7;
+    sint2->significand->digits[4] = 7;
+    sint2->significand->digits[5] = 7;
+    sint2->significand->digits[6] = 7;
+    sint2->significand->size = 7;
+    sint2->exponent = 0;
     // DEBUG_PRINT_APINT(sint2);
+    ctx.precision = 10;
 
-    APInt *resa = apint_pow(sint2, sint);
-    DEBUG_PRINT_APINT(resa);
+    APFloat *resa = apfloat_pow(sint2, sint);
+    // DEBUG_PRINT_APINT(resa);
+    print_apfloat(resa, AUTO);
 }
 
 void test_runner(TestFunction tests[], int num_tests) {
@@ -86,10 +89,12 @@ void test_runner(TestFunction tests[], int num_tests) {
     else printf("All tests (%d/%d) passed!\n", num_tests, num_tests);
 }
 
-int main() {
+int main(int argc, char **argv) {
+    (void) argc;
+    (void) argv;
     srand(time(NULL));
     TestFunction tests[] = { apint_test_create_from_int, apint_test_add, apint_test_sub, 
-                             apint_test_mul, apint_test_div, apfloat_test_add, 
+                             apint_test_mul, apint_test_div, apint_test_pow, apfloat_test_add, 
                              apfloat_test_sub, apfloat_test_mul, apfloat_test_div };
     int num_tests = sizeof(tests) / sizeof(tests[0]);
     test_runner(tests, num_tests);

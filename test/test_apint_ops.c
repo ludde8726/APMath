@@ -22,7 +22,7 @@ int apint_is_equal(APInt *num, long long int_num) {
     return 1;
 }
 
-int apint_test_create_from_int() {
+int apint_test_create_from_int(void) {
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = RANDOM_NUMBER;
         APInt *apint_repr = apint_from_int(x);
@@ -32,7 +32,7 @@ int apint_test_create_from_int() {
     return 1;
 }
 
-int apint_test_add() {
+int apint_test_add(void) {
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = RANDOM_NUMBER;
         long long y = RANDOM_NUMBER;
@@ -48,7 +48,7 @@ int apint_test_add() {
     }
     return 1;
 }
-int apint_test_sub() {
+int apint_test_sub(void) {
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = RANDOM_NUMBER;
         long long y = RANDOM_NUMBER;
@@ -66,7 +66,7 @@ int apint_test_sub() {
     return 1;
 }
 
-int apint_test_mul() {
+int apint_test_mul(void) {
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = RANDOM_NUMBER;
         long long y = RANDOM_NUMBER;
@@ -84,7 +84,7 @@ int apint_test_mul() {
     return 1;
 }
 
-int apint_test_div() {
+int apint_test_div(void) {
     for (int i = 0; i < ITERATIONS; i++) {
         int x = RANDOM_NUMBER;
         int y = RANDOM_NUMBER;
@@ -104,7 +104,7 @@ int apint_test_div() {
     return 1;
 }
 
-int apint_test_pow() {
+int apint_test_pow(void) {
     for (int i = 0; i < ITERATIONS; i++) {
         long long x = (long long)(rand() % 20) - 10;
         long long y = (long long)(rand() % 10);

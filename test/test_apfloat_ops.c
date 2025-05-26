@@ -21,7 +21,7 @@ int apfloat_almost_eq(APFloat *num, long double float_num) {
     return fabsl(float_num - num_as_float) < powl(10, num->exponent+1);
 }
 
-int apfloat_test_add() {
+int apfloat_test_add(void) {
     ctx.precision = PRECISION;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x_man = (long long)(rand() % (long long)(pow(10, PRECISION)-1)) - (long long)(pow(10, PRECISION)-1) / 2;
@@ -51,7 +51,7 @@ int apfloat_test_add() {
     return 1;
 }
 
-int apfloat_test_sub() {
+int apfloat_test_sub(void) {
     ctx.precision = PRECISION;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x_man = (long long)(rand() % (long long)(pow(10, PRECISION)-1)) - (long long)(pow(10, PRECISION)-1) / 2;
@@ -81,7 +81,7 @@ int apfloat_test_sub() {
     return 1;
 }
 
-int apfloat_test_mul() {
+int apfloat_test_mul(void) {
     ctx.precision = PRECISION;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x_man = (long long)(rand() % (long long)(pow(10, PRECISION)-1)) - (long long)(pow(10, PRECISION)-1) / 2;
@@ -111,7 +111,7 @@ int apfloat_test_mul() {
     return 1;
 }
 
-int apfloat_test_div() {
+int apfloat_test_div(void) {
     ctx.precision = PRECISION;
     for (int i = 0; i < ITERATIONS; i++) {
         long long x_man = (long long)(rand() % (long long)(pow(10, PRECISION)-1)) - (long long)(pow(10, PRECISION)-1) / 2;

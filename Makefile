@@ -8,7 +8,7 @@ SRC_DIR := src
 TEST_DIR := test
 LIB_NAME := libapm
 
-CFLAGS := -fPIC -Wall -Wextra -Werror -I$(SRC_DIR)
+CFLAGS := -fPIC -Wall -Wextra -Werror -std=c11 -pedantic -I$(SRC_DIR)
 
 APCTX := $(SRC_DIR)/APCtx.c $(SRC_DIR)/APCtx.h
 APERR := $(SRC_DIR)/APError.c $(SRC_DIR)/APError.h
@@ -21,6 +21,8 @@ APHEL := $(SRC_DIR)/APHelpers.c $(SRC_DIR)/APHelpers.h
 
 static: $(LIB_DIR)/$(LIB_NAME).a
 dynamic: $(LIB_DIR)/$(LIB_NAME).so
+
+all: static dynamic test
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -60,6 +62,8 @@ $(OBJ_DIR)/APHelpers.o: $(APNUM) $(APERR) $(APHEL) | $(OBJ_DIR)
 TEST_FILES := $(TEST_DIR)/tests.c $(TEST_DIR)/test_apint_ops.c $(TEST_DIR)/test_apfloat_ops.c
 TEST_HEADERS := $(TEST_DIR)/test_apint_ops.h $(TEST_DIR)/test_apfloat_ops.h
 
-test: $(LIB_DIR)/$(LIB_NAME).a $(TEST_FILES) $(TEST_HEADERS) | $(BIN_DIR)
+$(BIN_DIR)/test_runner: $(LIB_DIR)/$(LIB_NAME).a $(TEST_FILES) $(TEST_HEADERS) | $(BIN_DIR)
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_runner $(TEST_FILES) $(LIB_DIR)/$(LIB_NAME).a
+
+test: $(BIN_DIR)/test_runner
 	./$(BIN_DIR)/test_runner
