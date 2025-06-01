@@ -1,6 +1,10 @@
 #pragma once
 
-#define REPORT_ERROR_OOM(x) do { apm_set_error(OUT_OF_MEMORY_ERROR, "MemoryError: Could not allocate memory for number."); return x; } while (0)
+#if defined(__GNUC__) || defined(__clang__)
+#define PRINTF_LIKE_WARNINGS(string_idx, arguments_idx_start) __attribute__((format(printf, string_idx, arguments_idx_start)))
+#else
+#define PRINTF_LIKE_WARNINGS(string_idx, arguments_idx_start)
+#endif
 
 enum APM_ErrorType {
     APM_ERROR_NONE,
@@ -24,6 +28,6 @@ struct APM_Error {
 char *apm_get_error(void);
 struct APM_Error *apm_get_error_ex(void);
 void apm_set_error(enum APM_ErrorType error_type, char *error_message);
-void apm_set_error_ex(enum APM_ErrorType error_type, const char *error_message, ...);
+void apm_set_error_ex(enum APM_ErrorType error_type, const char *error_message, ...) PRINTF_LIKE_WARNINGS(2, 3);
 
 void apm_set_error_handle(enum APM_ErrorHandle error_handle);
