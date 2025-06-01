@@ -16,7 +16,10 @@
 APInt *apint_init(void) {
     // Create APInt and allocate memory for digits pointer
     APInt *x = (APInt*)malloc(sizeof(APInt));
-    if (!x) REPORT_ERROR_OOM(NULL);
+    if (!x) {
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes of memory for apm_Int in `apint_init`.\n", (uint32_t)sizeof(APInt));
+        return NULL;
+    }
 
     *x = (APInt) {
         .sign = 1,
@@ -27,7 +30,8 @@ APInt *apint_init(void) {
 
     if (!x->digits) {
         free(x);
-        REPORT_ERROR_OOM(NULL);
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for apm_Int digits array in `apint_init`.\n", ctx.precision);
+        return NULL;
     }
 
     return x;
@@ -36,7 +40,10 @@ APInt *apint_init(void) {
 APInt *apint_init_ex(uint32_t precision) {
     // Create APInt and allocate memory for digits pointer
     APInt *x = (APInt*)malloc(sizeof(APInt));
-    if (!x) REPORT_ERROR_OOM(NULL);
+    if (!x) {
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for apm_Int digits array in `apint_init_ex`.\n", (uint32_t)sizeof(APInt));
+        return NULL;
+    }
 
     *x = (APInt) {
         .sign = 1,
@@ -47,7 +54,8 @@ APInt *apint_init_ex(uint32_t precision) {
 
     if (!x->digits) {
         free(x);
-        REPORT_ERROR_OOM(NULL);
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for apm_Int digits array in `apint_init_ex`.\n", precision);
+        return NULL;
     }
 
     return x;
@@ -91,7 +99,7 @@ bool apint_copy_into_resize(APInt *x, APInt *y) {
 
 bool apint_round_at_n(APInt *x, uint32_t n) {
     if (n - 1 > x->size) {
-        apm_set_error(ROUNDING_ERROR, "Cannot round at non existant digit.");
+        apm_set_error(APM_ERROR_ROUNDING, "Cannot round at non existant digit.\n");
         return false;
     }
 
@@ -113,7 +121,10 @@ bool apint_round_at_n(APInt *x, uint32_t n) {
 
 bool apint_resize(APInt *x, uint32_t precision) {
     DIGITS_DTYPE *new_digits = calloc(precision, sizeof(DIGITS_DTYPE));
-    if (!new_digits) REPORT_ERROR_OOM(false); // Memory allocation failed.
+    if (!new_digits) {
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for new digits array in `apint_resize`.\n", precision);
+        return NULL;
+    } 
     // If the size of x is greater than the precision, loose the least significant digits.
     if (x->size > precision) {
         memmove(new_digits, x->digits + (x->size - precision), precision * sizeof(DIGITS_DTYPE));
@@ -183,7 +194,10 @@ void apint_normalize(APInt *x) {
 
 APFloat *apfloat_init(void) {
     APFloat *x = (APFloat*)malloc(sizeof(APFloat));
-    if (!x) REPORT_ERROR_OOM(NULL);
+    if (!x) {
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for apm_Float in `apfloat_init`.\n", (uint32_t)sizeof(APFloat));
+        return NULL;
+    }
 
     *x = (APFloat) {
         .sign = 1,
@@ -193,6 +207,7 @@ APFloat *apfloat_init(void) {
 
     if (!x->significand) {
         free(x);
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for apm_Float digits array in `apfloat_init`.\n", ctx.precision);
         return NULL;
     }
 
@@ -201,16 +216,19 @@ APFloat *apfloat_init(void) {
 
 APFloat *apfloat_init_ex(uint32_t precision) {
     APFloat *x = (APFloat*)malloc(sizeof(APFloat));
-    if (!x) REPORT_ERROR_OOM(NULL);
+    if (!x) {
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for apm_Float in `apfloat_init`.\n", (uint32_t)sizeof(APFloat));
+        return NULL;
+    }
 
     *x = (APFloat) {
         .sign = 1,
         .significand = apint_init_ex(precision),
         .exponent = 0
     };
-
     if (!x->significand) {
         free(x);
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for apm_Float digits array in `apfloat_init`.\n", precision);
         return NULL;
     }
 
@@ -255,7 +273,7 @@ APFloat *apfloat_copy_ex(APFloat *x, uint32_t precision) {
 
 bool apfloat_round(APFloat *x, uint32_t n) {
     if (n > APF_SZ(x)) {
-        apm_set_error(ROUNDING_ERROR, "Cannot round float to more digits than its current size.");
+        apm_set_error_ex(APM_ERROR_ROUNDING, "Cannot round float to more digits than its current size (%u->%u).", APF_SZ(x), n);
         return false;
     }
     if (APF_DIG(x)[APF_SZ(x) - n - 1] >= 5) {
@@ -289,7 +307,10 @@ bool apfloat_round_resize(APFloat *x, uint32_t precision) {
 
 APFloat *apfloat_from_apint(APInt *x, int64_t exponent) {
     APFloat *res = (APFloat*)malloc(sizeof(APFloat));
-    if (!res) REPORT_ERROR_OOM(NULL);
+    if (!res) {
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for apm_Float in `apfloat_init`.\n", (uint32_t)sizeof(APFloat));
+        return NULL;
+    }
 
     *res = (APFloat) {
         .sign = x->sign,
@@ -303,7 +324,10 @@ APFloat *apfloat_from_apint(APInt *x, int64_t exponent) {
 
 APFloat *apfloat_from_apint_ex(APInt *x, int64_t exponent, uint32_t precision) {
     APFloat *res = (APFloat*)malloc(sizeof(APFloat));
-    if (!res) REPORT_ERROR_OOM(NULL);
+    if (!res) {
+        apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for apm_Float in `apfloat_init`.\n", (uint32_t)sizeof(APFloat));
+        return NULL;
+    }
 
     *res = (APFloat) {
         .sign = x->sign,

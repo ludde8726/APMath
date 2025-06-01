@@ -42,7 +42,10 @@ char *apfloat_to_string(APFloat *x, enum PrintType print_type) {
         if (apfloat_is_zero(x)) {
             // Hack to allow free to always be called on the return
             char *res = (char*)malloc(8 * sizeof(char));
-            if (!res) REPORT_ERROR_OOM(NULL);
+            if (!res) {
+                apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)(8 * sizeof(char)));
+                return NULL;
+            }
             snprintf(res, 8, "0.0e+00");
             return res;
         }
@@ -64,14 +67,20 @@ char *apfloat_to_string(APFloat *x, enum PrintType print_type) {
         if (APF_SZ(x) <= 1) {
             // If we have a single digit number, just set the after decimal to 0
             after_decimal = (char*)malloc(2 * sizeof(char));
-            if (!after_decimal) REPORT_ERROR_OOM(NULL);
+            if (!after_decimal) {
+                apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)(2 * sizeof(char)));
+                return NULL;
+            }
             after_decimal[0] = '0';
             after_decimal[1] = '\0';
             extra_space++;
         } else {
             // Create a string of all digits after the decimal point
             after_decimal = (char*)malloc(APF_SZ(x) * sizeof(char));
-            if (!after_decimal) REPORT_ERROR_OOM(NULL);
+            if (!after_decimal) {
+                apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)(APF_SZ(x) * sizeof(char)));
+                return NULL;
+            }
             uint32_t index = 0;
             for (uint32_t i = APF_SZ(x)-1; i > 0; i--) {
                 after_decimal[index++] = '0' + APF_DIG(x)[i-1];
@@ -79,10 +88,11 @@ char *apfloat_to_string(APFloat *x, enum PrintType print_type) {
             after_decimal[index++] = '\0';
         }
 
-        char *res = (char*)malloc(APF_SZ(x) * sizeof(char) + extra_space);
+        char *res = (char*)malloc((APF_SZ(x) + extra_space) * sizeof(char));
         if (!res) {
             free(after_decimal);
-            REPORT_ERROR_OOM(NULL);
+            apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)((APF_SZ(x) + extra_space) * sizeof(char)));
+            return NULL;
         }
 
         // Print the result into res
@@ -98,7 +108,10 @@ char *apfloat_to_string(APFloat *x, enum PrintType print_type) {
         if (apfloat_is_zero(x)) {
             // Hack to allow free to always be called on the return
             char *res = (char*)malloc(11 * sizeof(char));
-            if (!res) REPORT_ERROR_OOM(NULL);
+            if (!res) {
+                apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)(11 * sizeof(char)));
+                return NULL;
+            }
             snprintf(res, 11, "0.0 * 10^0");
             return res;
         }
@@ -118,14 +131,20 @@ char *apfloat_to_string(APFloat *x, enum PrintType print_type) {
         if (APF_SZ(x) <= 1) {
             // If we have a single digit number, just set the after decimal to 0
             after_decimal = (char*)malloc(2 * sizeof(char));
-            if (!after_decimal) REPORT_ERROR_OOM(NULL);
+            if (!after_decimal) {
+                apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)(2 * sizeof(char)));
+                return NULL;
+            }
             after_decimal[0] = '0';
             after_decimal[1] = '\0';
             extra_space++;
         } else {
             // Create a string of all digits after the decimal point
             after_decimal = (char*)malloc(APF_SZ(x) * sizeof(char));
-            if (!after_decimal) REPORT_ERROR_OOM(NULL);
+            if (!after_decimal) {
+                apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)(APF_SZ(x) * sizeof(char)));
+                return NULL;
+            }
             uint32_t index = 0;
             for (uint32_t i = APF_SZ(x)-1; i > 0; i--) {
                 after_decimal[index++] = '0' + APF_DIG(x)[i-1];
@@ -136,7 +155,8 @@ char *apfloat_to_string(APFloat *x, enum PrintType print_type) {
         char *res = (char*)malloc((APF_SZ(x) + extra_space) * sizeof(char));
         if (!res) {
             free(after_decimal);
-            REPORT_ERROR_OOM(NULL);
+            apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)((APF_SZ(x) + extra_space) * sizeof(char)));
+            return NULL;
         }
         
         // Print the result into res
@@ -151,7 +171,10 @@ char *apfloat_to_string(APFloat *x, enum PrintType print_type) {
         if (apfloat_is_zero(x)) { 
             // Hack to allow free to always be called on the return
             char *res = (char*)malloc(4 * sizeof(char));
-            if (!res) REPORT_ERROR_OOM(NULL);
+            if (!res) {
+                apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)(4 * sizeof(char)));
+                return NULL;
+            }
             snprintf(res, 4, "0.0");
             return res;
         } else if (x->exponent >= 0) {
@@ -159,7 +182,10 @@ char *apfloat_to_string(APFloat *x, enum PrintType print_type) {
             int extra_space = x->exponent + 3; // We allocate space for the zeroes aswell as a .0 at the end
             if (x->sign == -1) extra_space++;
             char *res = (char*)malloc((APF_SZ(x) + extra_space) * sizeof(char));
-            if (!res) REPORT_ERROR_OOM(NULL);
+            if (!res) {
+                apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)((APF_SZ(x) + extra_space) * sizeof(char)));
+                return NULL;
+            }
 
             uint32_t index = 0;
             if (x->sign == -1) res[index++] = '-';
@@ -179,7 +205,10 @@ char *apfloat_to_string(APFloat *x, enum PrintType print_type) {
             int extra_space = llabs(APF_SZ(x) + x->exponent) + 3; // We allocate space for the zeroes aswell as a 0. at the start
             if (x->sign == -1) extra_space++;
             char *res = (char*)malloc((APF_SZ(x) + extra_space) * sizeof(char));
-            if (!res) REPORT_ERROR_OOM(NULL);
+            if (!res) {
+                apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)((APF_SZ(x) + extra_space) * sizeof(char)));
+                return NULL;
+            }
 
             uint32_t index = 0;
             if (x->sign == -1) res[index++] = '-';
@@ -197,7 +226,10 @@ char *apfloat_to_string(APFloat *x, enum PrintType print_type) {
             int extra_space = 2;
             if (x->sign == -1) extra_space++;
             char *res = (char*)malloc((APF_SZ(x) + extra_space) * sizeof(char));
-            if (!res) REPORT_ERROR_OOM(NULL);
+            if (!res) {
+                apm_set_error_ex(APM_ERROR_OUT_OF_MEMORY, "Could not allocate %u bytes for string in `apfloat_to_string`.\n", (uint32_t)((APF_SZ(x) + extra_space) * sizeof(char)));
+                return NULL;
+            }
 
             uint32_t index = 0;
             uint32_t decimal_index = APF_SZ(x) + x->exponent;

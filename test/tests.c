@@ -18,6 +18,7 @@ typedef int (*TestFunction)(void);
 void testing(void) {
     // Set precision to 10 (we don't need more)
     ctx.precision = 10;
+    apm_set_error_handle(APM_ERROR_HANDLE_FATAL);
     // Create two ints
     APFloat *small_float = apfloat_init();
     APFloat *small_float2 = apfloat_init();

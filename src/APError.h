@@ -3,11 +3,17 @@
 #define REPORT_ERROR_OOM(x) do { apm_set_error(OUT_OF_MEMORY_ERROR, "MemoryError: Could not allocate memory for number."); return x; } while (0)
 
 enum APM_ErrorType {
-    NO_ERROR,
-    OUT_OF_MEMORY_ERROR,
-    DIVISION_BY_ZERO_ERROR,
-    ROUNDING_ERROR,
-    OVERFLOW_ERROR
+    APM_ERROR_NONE,
+    APM_ERROR_OUT_OF_MEMORY,
+    APM_ERROR_DIVISION_BY_ZERO,
+    APM_ERROR_ROUNDING,
+    APM_ERROR_OVERFLOW
+};
+
+enum APM_ErrorHandle {
+    APM_ERROR_HANDLE_NONE,
+    APM_ERROR_HANDLE_LOG,
+    APM_ERROR_HANDLE_FATAL
 };
 
 struct APM_Error {
@@ -15,5 +21,9 @@ struct APM_Error {
     char *message;
 };
 
-struct APM_Error *apm_get_error(void);
+char *apm_get_error(void);
+struct APM_Error *apm_get_error_ex(void);
 void apm_set_error(enum APM_ErrorType error_type, char *error_message);
+void apm_set_error_ex(enum APM_ErrorType error_type, const char *error_message, ...);
+
+void apm_set_error_handle(enum APM_ErrorHandle error_handle);

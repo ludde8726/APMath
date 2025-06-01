@@ -21,7 +21,7 @@ int apint_abs_compare(const APInt *x, const APInt *y) {
 
 bool apint_left_shift_inplace(APInt *x, uint32_t n) {
     if (x->size + n > x->capacity) {
-        apm_set_error(OVERFLOW_ERROR, "OverflowError: Insufficient capacity for left shift.");
+        apm_set_error(APM_ERROR_OVERFLOW, "Insufficient capacity for left shift.\n");
         return false;
     }
     memmove(x->digits + n, x->digits, x->size * sizeof(DIGITS_DTYPE));
@@ -301,7 +301,7 @@ APInt *apint_div(APInt *x, APInt *y, APInt **remainder) {
 
 APInt *apint_div_impl(APInt *x, APInt *y, APInt **remainder, uint32_t precicion) {
     if (apint_is_zero(y)) {
-        apm_set_error(DIVISION_BY_ZERO_ERROR, "ZeroDivisionError: Division by zero");
+        apm_set_error(APM_ERROR_DIVISION_BY_ZERO, "Division by zero.\n");
         return NULL;
     }
 
