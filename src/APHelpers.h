@@ -7,8 +7,6 @@ enum PrintType {
     REGULAR,
 };
 
-static inline int get_exponent_digits(int64_t n);
-
 // Converts an APFloat into a string. 
 // The output format is determined by the specified PrintType:
 // - AUTO: Chooses between regular and scientific notation based on the number's magnitude.

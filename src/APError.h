@@ -26,7 +26,7 @@ struct APM_Error {
 };
 
 char *apm_get_error(void);
-struct APM_Error *apm_get_error_ex(void);
+struct APM_Error apm_get_error_ex(void);
 void apm_set_error(enum APM_ErrorType error_type, char *error_message);
 void apm_set_error_ex(enum APM_ErrorType error_type, const char *error_message, ...) PRINTF_LIKE_WARNINGS(2, 3);
 

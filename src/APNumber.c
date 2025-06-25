@@ -166,6 +166,7 @@ APInt *apint_from_int(long long x) {
 }
 
 void apint_free(APInt *x) {
+    if (!x) return;
     if (x->digits) free(x->digits);
     free(x);
 }

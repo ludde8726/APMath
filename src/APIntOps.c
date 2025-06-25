@@ -305,6 +305,10 @@ APInt *apint_div_impl(APInt *x, APInt *y, APInt **remainder, uint32_t precicion)
         return NULL;
     }
 
+    APInt *res = NULL;
+    APInt *rem = NULL;
+    APInt *shifted_y = NULL;
+
     if (apint_abs_compare(x, y) == -1) {
         APInt *res = apint_init_ex(precicion);
         if (!res) return NULL;
@@ -312,20 +316,20 @@ APInt *apint_div_impl(APInt *x, APInt *y, APInt **remainder, uint32_t precicion)
         res->digits[0] = 0;
         if (remainder) {
             *remainder = apint_copy_ex(x, precicion);
-            if (!*remainder) { apint_free(res); return NULL; }
+            if (!*remainder) goto error_cleanup;
         }
         return res;
     }
 
     int result_sign = 1;
 
-    APInt *rem = apint_copy_ex(x, precicion);
-    if (!rem) return NULL;
+    rem = apint_copy_ex(x, precicion);
+    if (!rem) goto error_cleanup;
     int shift = (int)(x->size - y->size);
-    APInt *shifted_y = apint_left_shift(y, shift);
-    if (!shifted_y) { apint_free(rem); return NULL; }
-    APInt *res = apint_init_ex(precicion);
-    if (!res) { apint_free(rem); apint_free(shifted_y); return NULL; }
+    shifted_y = apint_left_shift(y, shift);
+    if (!shifted_y) goto error_cleanup;
+    res = apint_init_ex(precicion);
+    if (!res) goto error_cleanup;
 
     if (x->sign != y->sign) result_sign = -1;
     rem->sign = 1;
@@ -334,7 +338,7 @@ APInt *apint_div_impl(APInt *x, APInt *y, APInt **remainder, uint32_t precicion)
     for (int i = shift; i >= 0; i--) {
         int count = 0;
         while (apint_abs_compare(rem, shifted_y) >= 0) { // while dividend >= divisor 
-            if (!apint_sub_inplace(rem, shifted_y)) return NULL;
+            if (!apint_sub_inplace(rem, shifted_y)) goto error_cleanup;
             // apint_free(rem);
             // rem = new_rem;
             count++;
@@ -352,6 +356,12 @@ APInt *apint_div_impl(APInt *x, APInt *y, APInt **remainder, uint32_t precicion)
     else apint_free(rem);
     apint_free(shifted_y);
     return res;
+error_cleanup:
+    apint_free(res);
+    apint_free(rem);
+    apint_free(shifted_y);
+    if (remainder) *remainder = NULL;
+    return NULL;
 }
 
 #endif
@@ -364,67 +374,66 @@ APInt *apint_pow(APInt *x, APInt *y) {
         fprintf(stderr, "Error: Integer exponentiation only works on exponents greater than or equal to 0.\n");
         exit(1);
     }
-    APInt *base = apint_copy_ex(x, x->size);
-    if (!base) return NULL;
-    APInt *exponent = apint_copy_ex(y, y->size);
-    if (!exponent) { apint_free(base); return NULL; }
-    APInt *two = apint_init_ex(1);
-    if (!two) { apint_free(base); apint_free(exponent); return NULL; }
+
+    APInt *base = NULL, *exponent = NULL, *two = NULL, *res = NULL;
+    APInt *quotient = NULL, *remainder = NULL, *temp = NULL;
+
+    base = apint_copy_ex(x, x->size);
+    if (!base) goto error_cleanup;
+    exponent = apint_copy_ex(y, y->size);
+    if (!exponent) goto error_cleanup;
+    two = apint_init_ex(1);
+    if (!two) goto error_cleanup;
     two->digits[0] = 2;
     two->size = 1;
 
-    APInt *res = apint_init_ex(1);
-    if (!res) { apint_free(base); apint_free(exponent); apint_free(two); return NULL; }
+    res = apint_init_ex(1);
+    if (!res) goto error_cleanup;
 
     res->digits[0] = 1;
     res->size = 1;
 
     while (!apint_is_zero(exponent)) {
-        APInt *quotient;
-        APInt *remainder;
         quotient = apint_div_impl(exponent, two, &remainder, exponent->size);
-        if (!quotient) { 
-            if (remainder) apint_free(remainder); 
-            apint_free(base); apint_free(exponent); apint_free(two);
-            return NULL; 
-        }
-        if (!remainder) {
-            if (quotient) apint_free(quotient);
-            apint_free(base); apint_free(exponent); apint_free(two);
-            return NULL;
-        }
+        if (!quotient || !remainder) goto error_cleanup;
 
         if (!apint_is_zero(remainder)) {
-            APInt *temp = res;
+            temp = res;
             res = apint_mul_impl(res, base, res->size + base->size);
-            if (!res) {
-                apint_free(base); apint_free(exponent); apint_free(two); apint_free(quotient); apint_free(remainder); apint_free(temp);
-                return NULL;
-            }
+            if (!res) goto error_cleanup;
             apint_free(temp);
+            temp = NULL;
         }
         apint_free(exponent);
         apint_free(remainder);
         exponent = quotient;
+        remainder = NULL;
+        quotient = NULL;
         
-        APInt *temp = base;
+        temp = base;
         base = apint_mul_impl(base, base, base->size * 2);
-        if (!base) {
-            apint_free(exponent); apint_free(two); apint_free(temp);
-            return NULL;
-        }
+        if (!base) goto error_cleanup;
         apint_free(temp);
+        temp = NULL;
     }
+    
+    if (!apint_resize(res, res->size)) goto error_cleanup;
+
     apint_free(base);
     apint_free(exponent);
     apint_free(two);
 
-    if (!apint_resize(res, res->size)) {
-        apint_free(res);
-        return NULL;
-    };
     apint_normalize(res);
     return res;
+error_cleanup:
+    apint_free(base);
+    apint_free(exponent);
+    apint_free(two);
+    apint_free(res);
+    apint_free(quotient);
+    apint_free(remainder);
+    apint_free(temp);
+    return NULL;
 }
 
 #endif

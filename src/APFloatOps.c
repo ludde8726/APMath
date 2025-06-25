@@ -267,40 +267,27 @@ APFloat *apfloat_div_ex(APFloat *x, APFloat *y, uint32_t precision) {
 }
 
 APFloat *apfloat_div_impl(APFloat *x, APFloat *y, uint32_t precision) {
-    APInt *remainder;
-    APInt *initial_significand = apint_div_impl(x->significand, y->significand, &remainder, precision);
-    if (!initial_significand) return NULL;
-    APFloat *res = apfloat_from_apint(initial_significand, x->exponent-y->exponent);
-    if (!res) {
-        apint_free(remainder);
-        apint_free(initial_significand);
-        return NULL;
-    }
+    APInt *remainder = NULL;
+    APInt *initial_significand = NULL;
+    APFloat *res = NULL;
+
+    initial_significand = apint_div_impl(x->significand, y->significand, &remainder, precision);
+    if (!initial_significand) goto error_cleanup;
+    res = apfloat_from_apint(initial_significand, x->exponent-y->exponent);
+    if (!res) goto error_cleanup;
     bool should_shift = !apint_is_zero(initial_significand);
     while (!apint_is_zero(remainder) && APF_SZ(res) < precision) {
         if (remainder->size < precision) {
-            if (!apint_left_shift_inplace(remainder, 1)) {
-                apfloat_free(res);
-                apint_free(remainder);
-                return NULL;
-            }
+            if (!apint_left_shift_inplace(remainder, 1)) goto error_cleanup;
         }
         else apint_right_shift_inplace(y->significand, 1);
         DIGITS_DTYPE count = 0;
         while (apint_abs_compare(remainder, y->significand) >= 0) {
-            if (!apint_sub_inplace(remainder, y->significand)) {
-                apfloat_free(res);
-                apint_free(remainder);
-                return NULL;
-            }
+            if (!apint_sub_inplace(remainder, y->significand)) goto error_cleanup;
             count++;
         }
         if (should_shift) {
-            if (!apint_left_shift_inplace(res->significand, 1)) {
-                apfloat_free(res);
-                apint_free(remainder);
-                return NULL;
-            }
+            if (!apint_left_shift_inplace(res->significand, 1)) goto error_cleanup;
         }
         if (count) should_shift = true;
         res->exponent--;
@@ -310,6 +297,11 @@ APFloat *apfloat_div_impl(APFloat *x, APFloat *y, uint32_t precision) {
     res->sign = x->sign == y->sign ? 1 : -1;
     apfloat_normalize(res);
     return res;
+error_cleanup:
+    apint_free(remainder);
+    apint_free(initial_significand);
+    apfloat_free(res);
+    return NULL;
 }
 
 #endif
@@ -349,33 +341,31 @@ APFloat *apfloat_pow_ex(APFloat *x, APInt *y, uint32_t precision) {
 }
 
 APFloat *apfloat_pow_impl(APFloat *x, APInt *y, uint32_t precision) {
+    APInt *base = NULL, *exponent = NULL, *two = NULL, *res = NULL;
+    APInt *quotient = NULL, *remainder = NULL, *temp = NULL;
+    APFloat *apfloat_repr = NULL, *one = NULL, *res_inverse = NULL;
+    
+    // TODO: This should be an apm error
     if (y->size > 19 || (y->size == 19 && y->digits[19] >= 9)) {
         fprintf(stderr, "Maximum exponent allowed is 8,999,999,999,999,999,999");
         exit(EXIT_FAILURE);
     }
-    APInt *base = apint_copy_ex(x->significand, APF_SZ(x));
-    if (!base) return NULL;
-    APInt *exponent = apint_copy_ex(y, y->size);
-    if (!exponent) {
-        apint_free(base);
-        return NULL;
-    }
-    APInt *two = apint_init_ex(1);
-    if (!two) {
-        apint_free(base); apint_free(exponent);
-        return NULL;
-    }
+
+    base = apint_copy_ex(x->significand, APF_SZ(x));
+    if (!base) goto error_cleanup;
+    exponent = apint_copy_ex(y, y->size);
+    if (!exponent) goto error_cleanup;;
+    two = apint_init_ex(1);
+    if (!two) goto error_cleanup;
     two->digits[0] = 2;
     two->size = 1;
     
-    APInt *res = apint_init_ex(1);
-    if (!res) {
-        apint_free(base); apint_free(exponent); apint_free(two);
-        return NULL;
-    }
+    res = apint_init_ex(1);
+    if (!res) goto error_cleanup;
     res->digits[0] = 1;
     res->size = 1;
     
+    // TODO: This should be an apm error
     int64_t y_as_int = 0;
     for (uint32_t i = y->size; i > 0; i--) y_as_int += (int64_t)(y->digits[i-1] * powl(10, i-1));
     int64_t res_exponent = x->exponent * y_as_int;
@@ -385,74 +375,55 @@ APFloat *apfloat_pow_impl(APFloat *x, APInt *y, uint32_t precision) {
     }
     
     while (!apint_is_zero(exponent)) {
-        APInt *quotient = NULL;
-        APInt *remainder = NULL;
         quotient = apint_div_impl(exponent, two, &remainder, exponent->size);
-        if (!quotient) {
-            apint_free(base); apint_free(exponent); apint_free(two); apint_free(res);
-        }
+        if (!quotient || !remainder) goto error_cleanup;
         
         if (!apint_is_zero(remainder)) {
-            APInt *temp = res;
+            temp = res;
             res = apint_mul_impl(res, base, res->size + base->size);
-            if (!res) {
-                apint_free(base); apint_free(exponent); apint_free(two); apint_free(res); apint_free(quotient); apint_free(remainder); apint_free(temp);
-                return NULL;
-            }
+            if (!res) goto error_cleanup;
 
             if (res->size > precision) {
                 res_exponent += (int64_t)(res->size - precision);
-                if (!apint_resize(res, precision)) {
-                    apint_free(base); apint_free(exponent); apint_free(two); apint_free(res); apint_free(quotient); apint_free(remainder); apint_free(temp);
-                    return NULL;
-                }
+                if (!apint_resize(res, precision)) goto error_cleanup;
             }
             apint_free(temp);
+            temp = NULL;
         }
         apint_free(exponent);
         apint_free(remainder);
         exponent = quotient;
+        quotient = NULL;
+        remainder = NULL;
         
-        APInt *temp = base;
+        temp = base;
         base = apint_mul_impl(base, base, base->size * 2);
-        if (!base) {
-            apint_free(exponent); apint_free(two); apint_free(temp);
-            return NULL;
-        }
+        if (!base) goto error_cleanup;
         apint_free(temp);
+        temp = NULL;
     }
     
     apint_free(base);
     apint_free(exponent);
     apint_free(two);
+    base = NULL;
+    exponent = NULL;
+    two = NULL;
     
-    if (!apint_resize(res, res->size)) {
-        apint_free(res);
-        return NULL;
-    }
+    if (!apint_resize(res, res->size)) goto error_cleanup;
 
-    APFloat *apfloat_repr = apfloat_from_apint(res, res_exponent);
-    if (!apfloat_repr) {
-        apint_free(res);
-        return NULL;
-    }
+    apfloat_repr = apfloat_from_apint(res, res_exponent); // NOTE: We can't free res since it's on the apfloat_repr
+    if (!apfloat_repr) goto error_cleanup;
 
-    apfloat_normalize(apfloat_repr);
+    apfloat_normalize(apfloat_repr); 
     
     if (y->sign == -1) {
-        APFloat *one = apfloat_init_ex(1); 
-        if (!one) {
-            apfloat_free(apfloat_repr);
-            return NULL;
-        }
+        one = apfloat_init_ex(1); 
+        if (!one) goto error_cleanup;
         APF_DIG(one)[0] = 1;
         APF_SZ(one) = 1;
-        APFloat *res_inverse = apfloat_div_impl(one, apfloat_repr, precision);
-        if (!res_inverse) {
-            apfloat_free(apfloat_repr);
-            apfloat_free(one);
-            return NULL;
-        }
+        res_inverse = apfloat_div_impl(one, apfloat_repr, precision);
+        if (!res_inverse) goto error_cleanup;
 
         apfloat_free(apfloat_repr);
         apfloat_free(one);
@@ -461,6 +432,18 @@ APFloat *apfloat_pow_impl(APFloat *x, APInt *y, uint32_t precision) {
     }
     
     return apfloat_repr;
+error_cleanup:
+    apint_free(base);
+    apint_free(exponent);
+    apint_free(two);
+    apint_free(res);
+    apint_free(quotient);
+    apint_free(remainder);
+    apint_free(temp);
+    apfloat_free(apfloat_repr);
+    apfloat_free(one);
+    apfloat_free(res_inverse);
+    return NULL;
 }
 
 #endif

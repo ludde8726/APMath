@@ -17,7 +17,7 @@ APINT := $(SRC_DIR)/APIntOps.c $(SRC_DIR)/APIntOps.h
 APFLO := $(SRC_DIR)/APFloatOps.c $(SRC_DIR)/APFloatOps.h
 APHEL := $(SRC_DIR)/APHelpers.c $(SRC_DIR)/APHelpers.h
 
-.PHONY: all clean test
+.PHONY: all clean test static dynamic
 
 static: $(LIB_DIR)/$(LIB_NAME).a
 dynamic: $(LIB_DIR)/$(LIB_NAME).so

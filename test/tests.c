@@ -18,7 +18,6 @@ typedef int (*TestFunction)(void);
 void testing(void) {
     // Set precision to 10 (we don't need more)
     ctx.precision = 10;
-    apm_set_error_handle(APM_ERROR_HANDLE_FATAL);
     // Create two ints
     APFloat *small_float = apfloat_init();
     APFloat *small_float2 = apfloat_init();
@@ -93,6 +92,7 @@ void test_runner(TestFunction tests[], int num_tests) {
 int main(int argc, char **argv) {
     (void) argc;
     (void) argv;
+    apm_set_error_handle(APM_ERROR_HANDLE_FATAL);
     srand(time(NULL));
     TestFunction tests[] = { apint_test_create_from_int, apint_test_add, apint_test_sub, 
                              apint_test_mul, apint_test_div, apint_test_pow, apfloat_test_add, 

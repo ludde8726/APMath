@@ -31,9 +31,8 @@ char *apm_get_error(void) {
     }
 }
 
-struct APM_Error* apm_get_error_ex(void) {
-    if (APM_LastError.error != APM_ERROR_NONE) return &APM_LastError;
-    return NULL;
+struct APM_Error apm_get_error_ex(void) {
+    return APM_LastError;
 }
 
 void apm_set_error(enum APM_ErrorType error_type, char *error_message) {
